@@ -736,6 +736,9 @@ html{scrollbar-gutter:stable}
 .pc2.cmp .why{font-size:13px;line-height:1.55}
 .pc2.cmp .why ul{padding-left:16px}
 @media (max-width:560px){ .pc2.cmp .pn > div{padding:0 8px} .pc2.cmp .pn > div:first-child{padding-left:0} .pc2.cmp .pn .v{font-size:24px} .pc2.cmp .ladder .rung{grid-template-columns:44px minmax(0,1fr) 40px 34px;gap:8px} .pc2.cmp .hb-cap{display:none} .xin{padding:0 14px} }
+/* ===== v6.11 (Nov 12 audit): two-column blocks no longer push the page wider than a small phone (Record, Accuracy at 320-360px) ===== */
+.grid2 > *{min-width:0}
+@media (max-width:760px){ .grid2{grid-template-columns:minmax(0,1fr)} }
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} }
 </style>
 
