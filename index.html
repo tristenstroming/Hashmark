@@ -739,6 +739,16 @@ html{scrollbar-gutter:stable}
 /* ===== v6.11 (Nov 12 audit): two-column blocks no longer push the page wider than a small phone (Record, Accuracy at 320-360px) ===== */
 .grid2 > *{min-width:0}
 @media (max-width:760px){ .grid2{grid-template-columns:minmax(0,1fr)} }
+/* parlay leg swap (Nov 12) */
+.legs li{align-items:center}
+.legs li .lg-r{margin-left:auto}
+.rr{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--panel);color:var(--muted);display:grid;place-items:center;padding:0;margin-left:2px;transition:color .2s,border-color .2s,background-color .2s}
+.rr svg{width:15px;height:15px}
+.rr:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.legs li.swapped{border-radius:10px;margin:0 -8px;padding-left:8px;padding-right:8px}
+.rr-reset{margin-left:auto;margin-right:10px;font-size:12px}
+.plc2-h .pc{margin-left:0}
+@media (pointer:coarse){ .rr{width:34px;height:34px} }
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} }
 </style>
 
@@ -1647,6 +1657,9 @@ document.addEventListener('click',e=>{
   const gt=e.target.closest('[data-gtool]'); if(gt){ openTool(gt.dataset.gtool,{game:gt.dataset.gid,from:{view:'slate',game:gt.dataset.gid}}); return; }
   if(e.target.closest('[data-toolback]')){ closeTool(); return; }
   const tb=e.target.closest('#tbody'); if(!tb) return;
+  const rr=e.target.closest('[data-rr]'); if(rr){ const [K,i]=rr.dataset.rr.split('|'); rerollLeg(+K,+i,rr); return; }
+  const rz=e.target.closest('[data-rrreset]'); if(rz){ const K=+rz.dataset.rrreset; if(PLS){ PLS.res[K]=PLS.orig[K]; delete PLS.hist[K]; plRedraw(K,-1); } return; }
+  const pp=e.target.closest('[data-pp]'); if(pp){ openPlayer(pp.dataset.pp,pp.dataset.mk,pp.closest('li')); return; }
   const tg=e.target.closest('[data-tg]'); if(tg){ if(tg.dataset.tg==='all'){ TSET(TOOL+'_all',true); } else { TOOL_GAME=tg.dataset.tg; store.set('tgame',TOOL_GAME); TSET(TOOL+'_all',false); } stopWatch(); renderToolBody(); return; }
   const s=e.target.closest('[data-ts] [data-v2],[data-tc] [data-v2]'); if(s){ const grp=s.closest('[data-ts],[data-tc]'), key=grp.dataset.ts||grp.dataset.tc; TSET(key,s.dataset.v2); renderToolBody(); return; }
   const tt=e.target.closest('[data-tt]'); if(tt){ TSET(tt.dataset.tt,!TS(tt.dataset.tt,false)); renderToolBody(); return; }
@@ -1735,13 +1748,35 @@ function toolSgp(el){ const all=TS('sgp_all',false), mode=TS('pmode','likely');
     if(cands.length<3){ el.innerHTML=head+`<div class="card"><div class="empty">Not enough priced legs the model likes ${all?'this week':'in this game'} yet${all||g.props_live?'':' (DraftKings player lines aren’t up for this game)'}.</div></div>`; return; }
     const res={}; if(mode==='likely') Object.assign(res,beamParlays(cands,5,s=>s.joint,()=>true));
     else for(const K of [3,4,5]){ const b=beamParlays(cands,K,s=>s.indep*s.dec,(s,d)=>s.joint>=Math.pow(PL_FLOOR[K],d/K)); if(b[K]) res[K]=b[K]; }
-    const card=(K,i)=>{ const st=res[K]; if(!st) return `<div class="card plc2" style="--i:${i}"><div class="plc2-h"><b>${K} legs</b></div><p class="sm muted" style="margin:0">No ${K}-leg parlay meets the bar${mode==='value'?` (${Math.round(PL_FLOOR[K]*100)}%+ to hit)`:''}.</p></div>`;
-      const odds=amerOfDec(st.dec), e=st.joint-implied(odds), sgp=new Set(st.legs.map(x=>x.gid)).size<st.legs.length, lift=st.indep>0?st.joint/st.indep:1;
-      return `<div class="card plc2" style="--i:${i}"><div class="plc2-h"><b>${K} legs</b><span class="pc num">${(st.joint*100).toFixed(1)}%</span></div>
-        <ol class="legs">${st.legs.map(x=>`<li><div class="lg-t">${x.kind==='prop'?`<button type="button" class="lnk2" data-pp="${x.pid}" data-mk="${x.mk}">${esc(legTxt(x))}</button>`:`<b>${esc(legTxt(x))}</b>`}<span class="xs muted">${x.kind==='prop'?`${x.p.team} ${x.p.pos}`:'Game line'}${all?' · '+gameKey(D.games.find(y=>y.id===x.gid)):''}</span></div><div class="lg-r num"><b>${pct(x.p_)}</b><span class="xs muted">${fmtO(x.odds)}${x.est?'*':''}</span></div></li>`).join('')}</ol>
-        <div class="plsum"><div><span class="k">Chance all hit</span><b class="num">${(st.joint*100).toFixed(1)}%</b><span class="xs muted">fair ${amer(st.joint)}</span></div><div><span class="k">Legs multiplied</span><b class="num">${fmtO(odds)}</b><span class="xs muted">needs ${(implied(odds)*100).toFixed(1)}%</span></div><div><span class="k">Value</span><b>${valTag(e)} ${edgeTag(e)}</b><span class="xs muted">${sgp?(lift>1.03?`legs help each other (+${Math.round((lift-1)*100)}%)`:lift<.97?`legs work against each other (${Math.round((lift-1)*100)}%)`:'legs barely affect each other'):'different games'}</span></div></div></div>`; };
-    el.innerHTML=head+`<div class="plgrid2">${[3,4,5].map(card).join('')}</div><p class="xs muted tnote">“Legs multiplied” is the price if each leg were bet at its own price. DraftKings prices same-game parlays itself, often shorter when the legs move together, so compare with its real price. One leg per player, one side and one total per game; legs shorter than −300 are left out${parlayCands.skipped?`, and so ${parlayCands.skipped===1?'is':'are'} ${parlayCands.skipped} leg${parlayCands.skipped===1?'':'s'} where the model is 15+ points from DraftKings (check news before using those)`:''}. * −110 assumed.</p>`;
-    el.querySelectorAll('[data-pp]').forEach(b=>b.addEventListener('click',ev=>{ ev.stopPropagation(); openPlayer(b.dataset.pp,b.dataset.mk,b.closest('li')); })); },30); }
+    PLS={cands,mode,all,res,orig:{...res},hist:{},skipped:parlayCands.skipped};
+    el.innerHTML=head+`<div class="plgrid2">${[3,4,5].map((K,i)=>`<div class="plslot" data-pk="${K}">${plCard(K,i)}</div>`).join('')}</div><p class="xs muted tnote">Tap the swap icon next to a leg to replace it with the next-closest leg the model rates (by ${mode==='likely'?'chance':'value'}); tap again to keep cycling. “Legs multiplied” is the price if each leg were bet at its own price. DraftKings prices same-game parlays itself, often shorter when the legs move together, so compare with its real price. One leg per player, one side and one total per game; legs shorter than −300 are left out${parlayCands.skipped?`, and so ${parlayCands.skipped===1?'is':'are'} ${parlayCands.skipped} leg${parlayCands.skipped===1?'':'s'} where the model is 15+ points from DraftKings (check news before using those)`:''}. * −110 assumed.</p>`; },30); }
+/* Nov 12 (Tristen): "reroll" a parlay leg. The swap icon replaces that leg with the unused leg whose score (chance, or chance x
+   price in Best value) is closest to the one it replaces, keeping one leg per player and one side / total per game, and in Best
+   value keeping the parlay above its hit floor. Each tap moves to the next-closest leg; after the pool is used up it wraps. */
+let PLS=null;
+const RR_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h11l-3-3M20 17H9l3 3"/></svg>';
+const specOf=c=>c.kind==='prop'?`P|${c.pid}|${c.mk}|${c.side}`:`G|${c.gid}|${c.k}|${c.side}`;
+function plBuild(legs){ let st={legs:[],grps:new Set(),per:{},joint:1,indep:1,dec:1}; for(const c of legs) st=extendState(st,c); return st; }
+function plCard(K,i,hl){ const P=PLS, st=P.res[K], mode=P.mode, all=P.all;
+  if(!st) return `<div class="card plc2" style="--i:${i}"><div class="plc2-h"><b>${K} legs</b></div><p class="sm muted" style="margin:0">No ${K}-leg parlay meets the bar${mode==='value'?` (${Math.round(PL_FLOOR[K]*100)}%+ to hit)`:''}.</p></div>`;
+  const odds=amerOfDec(st.dec), e=st.joint-implied(odds), sgp=new Set(st.legs.map(x=>x.gid)).size<st.legs.length, lift=st.indep>0?st.joint/st.indep:1, edited=st!==P.orig[K];
+  return `<div class="card plc2" style="--i:${i}"><div class="plc2-h"><b>${K} legs</b>${edited?`<button type="button" class="lnk rr-reset" data-rrreset="${K}">Model’s pick</button>`:''}<span class="pc num" data-count="${+(st.joint*100).toFixed(1)}">${(st.joint*100).toFixed(1)}%</span></div>
+    <ol class="legs">${st.legs.map((x,j)=>`<li class="${j===hl?'swapped':''}"><div class="lg-t">${x.kind==='prop'?`<button type="button" class="lnk2" data-pp="${x.pid}" data-mk="${x.mk}">${esc(legTxt(x))}</button>`:`<b>${esc(legTxt(x))}</b>`}<span class="xs muted">${x.kind==='prop'?`${x.p.team} ${x.p.pos}`:'Game line'}${all?' · '+gameKey(D.games.find(y=>y.id===x.gid)):''}</span></div><div class="lg-r num"><b>${pct(x.p_)}</b><span class="xs muted">${fmtO(x.odds)}${x.est?'*':''}</span></div><button type="button" class="rr press" data-rr="${K}|${j}" aria-label="Swap this leg for the next-closest one" title="Swap leg">${RR_SVG}</button></li>`).join('')}</ol>
+    <div class="plsum"><div><span class="k">Chance all hit</span><b class="num">${(st.joint*100).toFixed(1)}%</b><span class="xs muted">fair ${amer(st.joint)}</span></div><div><span class="k">Legs multiplied</span><b class="num">${fmtO(odds)}</b><span class="xs muted">needs ${(implied(odds)*100).toFixed(1)}%</span></div><div><span class="k">Value</span><b>${valTag(e)} ${edgeTag(e)}</b><span class="xs muted">${sgp?(lift>1.03?`legs help each other (+${Math.round((lift-1)*100)}%)`:lift<.97?`legs work against each other (${Math.round((lift-1)*100)}%)`:'legs barely affect each other'):'different games'}</span></div></div></div>`; }
+function plRedraw(K,hl){ const slot=document.querySelector(`.plslot[data-pk="${K}"]`); if(!slot) return; const i=[3,4,5].indexOf(K); const before=slot.querySelector('.plc2').getBoundingClientRect();
+  slot.innerHTML=plCard(K,i,hl); const card=slot.querySelector('.plc2'); card.style.animation='none';
+  if(RM()) return; const li=slot.querySelector('li.swapped'); if(li) li.animate([{opacity:0,transform:'translateX(14px)',backgroundColor:'var(--accent-soft)'},{opacity:1,transform:'none',backgroundColor:'var(--accent-soft)',offset:.4},{backgroundColor:'transparent'}],{duration:700,easing:'cubic-bezier(.22,1,.36,1)'});
+  const after=card.getBoundingClientRect(); if(Math.abs(after.height-before.height)>1) card.animate([{height:before.height+'px'},{height:after.height+'px'}],{duration:300,easing:'cubic-bezier(.22,1,.36,1)'});
+  slot.querySelectorAll('.plsum b.num, .plc2-h .pc').forEach(b=>b.animate([{opacity:.3},{opacity:1}],{duration:400})); }
+function rerollLeg(K,i,btn){ const P=PLS; if(!P||!P.res[K]) return; const st=P.res[K], old=st.legs[i]; if(!old) return; const others=st.legs.filter((_,j)=>j!==i), used=new Set(others.map(x=>x.grp));
+  const key=P.mode==='likely'?(c=>c.p_):(c=>c.p_*c.dec); const h=(P.hist[K]=P.hist[K]||{}); const seen=(h[i]=h[i]||new Set([specOf(old)]));
+  let pool=P.cands.filter(c=>!used.has(c.grp)&&specOf(c)!==specOf(old)); if(P.mode==='value') pool=pool.filter(c=>plBuild(others.concat([c])).joint>=PL_FLOOR[K]);
+  if(!pool.length){ toast('No other leg fits this parlay'); return; }
+  let fresh=pool.filter(c=>!seen.has(specOf(c))); if(!fresh.length){ fresh=pool; seen.clear(); seen.add(specOf(old)); toast('Back to the first alternative'); }
+  fresh.sort((a,b)=>Math.abs(key(a)-key(old))-Math.abs(key(b)-key(old))||key(b)-key(a)); const nc=fresh[0]; seen.add(specOf(nc));
+  const legs=others.slice(); legs.splice(i,0,nc); P.res[K]=plBuild(legs);
+  if(btn&&!RM()) btn.animate([{transform:'rotate(0)'},{transform:'rotate(180deg)'}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
+  setTimeout(()=>plRedraw(K,i),btn&&!RM()?160:0); }
 
 /* ---------- picks-log tools: week picks, actual vs projected, accuracy, track record ---------- */
 const QB_MK=new Set(['PY','PC','PA','PTD','PRY']);
