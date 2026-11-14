@@ -749,6 +749,55 @@ html{scrollbar-gutter:stable}
 .rr-reset{margin-left:auto;margin-right:10px;font-size:12px}
 .plc2-h .pc{margin-left:0}
 @media (pointer:coarse){ .rr{width:34px;height:34px} }
+
+/* ===== v6.12 (Nov 13): directional tab slide, staged range bars, the outcome curve returns, summary-first slate ===== */
+::view-transition-old(root){animation:vtOut .18s cubic-bezier(.4,0,.2,1) both}
+::view-transition-new(root){animation:vtIn .4s cubic-bezier(.22,1,.36,1) both}
+@keyframes vtOut{to{opacity:0;transform:translateX(calc(var(--dir,0)*-26px))}}
+@keyframes vtIn{from{opacity:0;transform:translateX(calc(var(--dir,0)*26px))}}
+@keyframes fallIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* range bars draw themselves: wide band, inner band, projection dot pops, then the line drops in */
+.rb .b1{transition:transform .5s var(--exp) calc(var(--i,0)*30ms),opacity .4s,left .55s var(--spring),width .55s var(--spring)}
+.rb .b2{transition:transform .55s var(--exp) calc(var(--i,0)*30ms + 80ms),background-color .25s,left .55s var(--spring),width .55s var(--spring)}
+.rb .md{transition:left .6s var(--spring),transform .45s cubic-bezier(.34,1.56,.64,1) calc(var(--i,0)*30ms + 240ms)}
+.rb.pre .md{transform:scale(0)}
+.rb .ln{transform-origin:top;transition:left .5s var(--spring),background-color .2s,transform .4s var(--exp) calc(var(--i,0)*30ms + 330ms),opacity .25s calc(var(--i,0)*30ms + 330ms)}
+.rb.pre .ln{transform:scaleY(0);opacity:0}
+.rb.dragging .ln{transition:none}
+/* outcome curve */
+.curvebox{padding:4px 2px 0}
+.curve.anim path{transform-box:fill-box;transform-origin:bottom;animation:curveUp .7s var(--exp) both}
+.curve.anim path+path{animation-delay:.12s}
+.curve.anim line:first-of-type{animation:fallIn .35s var(--exp) .4s both}
+@keyframes curveUp{from{transform:scaleY(0);opacity:0}to{transform:none;opacity:1}}
+/* calibration line draws, dots pop */
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:drawLine 1s var(--exp) .2s forwards}
+@keyframes drawLine{to{stroke-dashoffset:0}}
+.chart circle{transform-box:fill-box;transform-origin:center;animation:pop .45s var(--spring) .55s both}
+/* slate summary chips */
+.khead{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.kstats{display:flex;gap:8px}
+.kstats button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:9px 14px;min-width:92px;text-align:left;animation:fallIn .45s var(--exp) both;transition:border-color .2s,transform .2s var(--ease)}
+.kstats button:nth-child(2){animation-delay:.06s} .kstats button:nth-child(3){animation-delay:.12s}
+.kstats button:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.kstats b{font:700 22px/1 var(--disp);letter-spacing:.01em}
+.kstats span{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:760px){ .khead{align-items:stretch;width:100%} .kstats button{flex:1;min-width:0} }
+/* top pick on a game card */
+.gpick{grid-column:1/-1;display:flex;align-items:center;gap:8px;min-width:0;padding:8px 10px;border-radius:10px;background:var(--panel-2);font-size:13px;animation:fallIn .4s var(--exp) both}
+.gpick .gp-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2);font-weight:550}
+.gpick b{font:700 17px/1 var(--disp)}
+/* picks strip in a game panel */
+.tpicks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:8px}
+.tpick{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);animation:fallIn .45s var(--exp) both;transition:border-color .2s,transform .2s var(--ease)}
+.tpicks .tpick:nth-child(2){animation-delay:.05s} .tpicks .tpick:nth-child(3){animation-delay:.1s} .tpicks .tpick:nth-child(n+4){animation-delay:.15s}
+.tpick:hover{border-color:var(--line-2)}
+.tpick .side{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpick b{font:700 20px/1 var(--disp);grid-row:1/3;grid-column:2}
+.tpick .xs{grid-column:1}
+/* stat tiles settle in */
+.pn > div{animation:fallIn .4s var(--exp) both} .pn > div:nth-child(2){animation-delay:.05s} .pn > div:nth-child(3){animation-delay:.1s}
+.tile{animation:fallIn .45s var(--exp) both} .tiles .tile:nth-child(2){animation-delay:.05s} .tiles .tile:nth-child(3){animation-delay:.1s} .tiles .tile:nth-child(4){animation-delay:.15s}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} }
 </style>
 
@@ -786,6 +835,7 @@ html{scrollbar-gutter:stable}
 <div class="scrim" id="scrim" hidden></div>
 <div id="sheets"></div>
 <div id="toast" role="status" aria-live="polite"></div>
+
 
 <script>
 /* Hashmark game simulator.
@@ -1171,7 +1221,8 @@ function tdHTML(g){ const rows=[]; for(const [pid,p] of Object.entries(D.players
   return `<div class="tblw"><table class="tbl"><thead><tr><th>Player</th><th>Model</th><th>Fair</th><th>DK</th><th>Edge</th></tr></thead><tbody>${rows.slice(0,14).map(m=>{ const o=m.p.lines&&m.p.lines.ATD&&m.p.lines.ATD.ov; const e=o!=null?(m.po-implied(o))*100:null; return `<tr><td><b style="font-weight:600">${esc(m.p.name)}</b> <span class="xs muted">${m.p.team}</span></td><td class="num">${pct(m.po)}</td><td class="num">${amer(m.po)}</td><td class="num">${fmtO(o)}</td><td class="num ${e==null?'':e>=8?'pos':e<=-8?'neg':''}">${e==null?'—':sg(e)}</td></tr>`; }).join('')}</tbody></table></div><p class="xs muted" style="margin:8px 0 14px">Chance of at least one rushing or receiving touchdown. A TD pick needs an 8+ point edge.</p>`; }
 
 /* ---------- views ---------- */
-function setView(v, push){ if(v!=='more'){ TOOL=null; stopWatch(); } VIEW=v; store.set('view',v); document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v?'page':'false'));
+const VORDER=['slate','picks','filter','record','more','about'];
+function setView(v, push){ document.documentElement.style.setProperty('--dir',Math.sign(VORDER.indexOf(v)-VORDER.indexOf(VIEW))); if(v!=='more'){ TOOL=null; stopWatch(); } VIEW=v; store.set('view',v); document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v?'page':'false'));
   movePill(); const run=()=>{ ({slate:renderSlate,picks:renderPicks,record:renderRecord,filter:renderFilter,more:renderMore,about:renderAbout})[v](); window.scrollTo({top:0}); };
   if(document.startViewTransition&&!RM()&&push) document.startViewTransition(run); else run(); }
 function movePill(){ const nav=$('#nav'), b=nav.querySelector('[aria-current="page"]'), pill=nav.querySelector('.pill'); if(!b||!pill) return; pill.style.width=b.offsetWidth+'px'; pill.style.transform=`translateX(${b.offsetLeft-3}px)`; }
@@ -1181,12 +1232,19 @@ function slotName(g){ const h=+g.time.split(':')[0]; if(g.day==='Sunday') return
 function renderSlate(){ const gs=D.games.slice().sort((a,b)=>kick(a)-kick(b)); const slots=[]; for(const g of gs){ const k=slotName(g)+'|'+g.date; let s=slots.find(x=>x.k===k); if(!s) slots.push(s={k,name:slotName(g),games:[]}); s.games.push(g); }
   const nLines=D.games.filter(g=>g.props_live).length; GI=0;
   $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Week ${D.week}</h1><p>Each game played out ${N.toLocaleString()} times. Tap a game to open it: projected score, every player's range against the DraftKings line, and the reason behind each number.</p></div>
-    <div class="sm muted num">${D.games.length} games · ${nLines} with player lines${D.byes&&D.byes.length?` · bye: ${D.byes.join(', ')}`:''}</div></div>
+    <div class="khead">${seasonStats()}<div class="xs muted num">${D.games.length} games · ${nLines} with player lines${D.byes&&D.byes.length?` · bye: ${D.byes.join(', ')}`:''}</div></div></div>
     ${slots.map(s=>`<div class="slot"><h2>${esc(s.name)} · ${esc(s.games[0].day.slice(0,3))} ${esc(s.games[0].date.slice(5).replace('-','/'))}</h2><div class="games">${s.games.map(gameCard).join('')}</div></div>`).join('')}</section>`;
   D.games.forEach(g=>{ if(SIM[g.id]) fillGame(g); });
   $('#main').querySelectorAll('.game').forEach(b=>b.addEventListener('click',()=>toggleGame(b.parentElement)));
   if(D.games.every(g=>SIM[g.id])) prebuildGames();
 }
+function seasonStats(){ if(!LOG) return ''; const P=LOG.picks.filter(p=>p.type==='prop'&&(p.tier||'pick')==='pick'&&p.mk!=='ATD'&&!p.price_est&&(p.result==='win'||p.result==='loss'));
+  const w=P.filter(p=>p.result==='win').length, u=P.reduce((s,p)=>s+(p.units||0),0), pend=weekPicks().filter(x=>!x.result).length;
+  if(!P.length&&!pend) return '';
+  return `<div class="kstats"><button type="button" data-go="record"><b class="num">${w}–${P.length-w}</b><span>season picks</span></button><button type="button" data-go="record"><b class="num ${u>=0?'pos':'neg'}">${sgnU(u)}</b><span>units</span></button><button type="button" data-go="picks"><b class="num">${pend}</b><span>picks to play</span></button></div>`; }
+function gamePicks(g){ if(!LOG) return []; return LOG.picks.filter(x=>x.week===D.week&&x.game===g.id&&x.type==='prop'&&x.tier==='pick'&&!x.result).sort((a,b)=>(a.price_est?1:0)-(b.price_est?1:0)||b.edge-a.edge); }
+const pickTxt=x=>x.mk==='ATD'?`${lastName(x.name)} anytime TD`:`${lastName(x.name)} ${x.side==='over'?'over':'under'} ${x.close_line??x.line} ${MK[x.mk].unit}`;
+const pickP=x=>x.p_over!=null&&x.mk!=='ATD'?(x.side==='over'?x.p_over:1-x.p_over):x.model_p;
 let GI=0;
 const chip=t=>`<span class="tchip ${LIGHTC.has(t)?'lt':''}" style="--tc:${TEAMC[t]||'#888'}">${t}</span>`;
 function gameCard(g){ const st=Date.now()>=kick(g)?'<span class="status live">Started</span>':g.props_live?'<span class="status on">Lines up</span>':'<span class="status">Lines soon</span>';
@@ -1194,8 +1252,10 @@ function gameCard(g){ const st=Date.now()>=kick(g)?'<span class="status live">St
    <div class="teams"><div class="trow" data-t="a">${chip(g.away)}<span class="tname">${esc(TEAMN[g.away]||g.away)}</span></div>
    <div class="trow" data-t="h">${chip(g.home)}<span class="tname">${esc(TEAMN[g.home]||g.home)}</span></div></div>
    <div class="score num"><span data-s="a" class="skel">00</span><span data-s="h" class="skel">00</span></div>
+   <div class="gpick" data-tp hidden></div>
    <div class="gfoot"><span class="num">${fmtTime(g.time)}</span><div class="wp" aria-hidden="true"><i data-w="a" style="width:50%;--tc:${TEAMC[g.away]}"></i><i data-w="h" style="width:50%;--tc:${TEAMC[g.home]}"></i></div><span class="mkt num" data-m></span>${st}<svg class="chev gchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div></button><div class="gacc"><div class="gbody"><div class="gpad"></div></div></div></div>`; }
 function fillGame(g){ const el=document.querySelector(`.game[data-g="${g.id}"]`); if(!el) return; const s=gameStats(g); const aw=s.pa>s.ph;
+  const tp=el.querySelector('[data-tp]'); if(tp&&tp.hidden&&Date.now()<kick(g)){ const gp=gamePicks(g); if(gp.length){ tp.innerHTML=`<span class="tag pick">Top pick</span><span class="gp-t">${esc(pickTxt(gp[0]))}</span><b class="num side ${gp[0].mk==='ATD'?'over':gp[0].side}">${pct(pickP(gp[0]))}</b>${gp.length>1?`<span class="xs muted num">+${gp.length-1} more</span>`:''}`; tp.hidden=false; } }
   const A=el.querySelector('[data-s="a"]'), H=el.querySelector('[data-s="h"]'); A.className=aw?'':'lose'; H.className=aw?'lose':''; tweenNum(A,Math.round(s.pa)); tweenNum(H,Math.round(s.ph));
   el.querySelector('[data-t="a"]').classList.toggle('lose',!aw); el.querySelector('[data-t="h"]').classList.toggle('lose',aw);
   el.querySelector('[data-w="a"]').style.width=(s.wa*100)+'%'; el.querySelector('[data-w="h"]').style.width=(s.wh*100)+'%';
@@ -1233,6 +1293,7 @@ function gameView(g){ let team=g.away;
       <div><span class="k">Spread</span><span class="v num">${spTxt(s.spreadHome)}</span><span class="s num">DK ${spTxt(dk?dk.home_spread:null)}</span></div>
       <div><span class="k">Total</span><span class="v num">${fmt1(s.total)}</span><span class="s num">DK ${dk?dk.total:'—'}${tLean?' · '+tLean:''}</span></div></div></div>
    <p class="sm muted" style="margin:12px 4px 0">${esc(g.stadium||'')} · ${esc(wx)}</p>
+   ${(()=>{ const gp=gamePicks(g); return gp.length?`<div class="sec"><h3>Model picks in this game · ${gp.length}</h3><div class="tpicks">${gp.slice(0,8).map(x=>`<button type="button" class="tpick press" data-jump="${x.pid}" data-jmk="${x.mk}"><span class="side ${x.mk==='ATD'?'over':x.side}">${esc(pickTxt(x))}</span><b class="num">${pct(pickP(x))}</b><span class="xs muted num">${x.price_est?'−110 est':fmtO(x.price)} · edge ${sg(x.edge*100)}</span></button>`).join('')}</div></div>`:''; })()}
    ${qbsw?`<div class="sec"><h3>What if</h3><div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">${qbsw}<span class="xs muted">Switching the quarterback re-runs this game's ${N.toLocaleString()} simulations. Weather what-ifs are under More on this game.</span></div></div>`:''}
    ${qbn||outs?`<div class="sec"><h3>News</h3><div class="note outs">${qbn}${outs}</div></div>`:''}
    <div class="sec"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><h3 style="margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Players</h3>
@@ -1245,6 +1306,7 @@ function gameView(g){ let team=g.away;
   const mount=el=>{ const draw=t=>{ team=t; el.querySelector('#plist').innerHTML=teamPlayers(g,t); el.querySelectorAll('#tmSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t?'true':'false')); grow(el);
       el.querySelectorAll('.pl-h').forEach(b=>b.addEventListener('click',()=>togglePlayer(b.closest('.pl')))); };
     draw(team); el.querySelectorAll('#tmSeg button').forEach(b=>b.addEventListener('click',()=>draw(b.dataset.t)));
+    el.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>openPlayer(b.dataset.jump,b.dataset.jmk,b)));
     el.querySelectorAll('[data-qb]').forEach(b=>b.addEventListener('click',()=>{ const tm=g.teams[b.dataset.team]; if(b.dataset.qb===tm.qb_default) delete QBSEL[tm.team]; else QBSEL[tm.team]=b.dataset.qb; store.set('qb',QBSEL); delete SIM[g.id];
       const body=el.querySelector('.gpad'); body.innerHTML=build(); mount(el); grow(el); FROWS=null; fillGame(g); toast(`Re-simulated with ${lastName(b.dataset.qb)} at quarterback`); })); };
   return {build,mount}; }
@@ -1360,13 +1422,13 @@ function togglePlayer(pl){ const open=!pl.classList.contains('open'), pid=pl.dat
   pl.querySelector('.pl-h').setAttribute('aria-expanded',open); if(open) raf2(()=>{ pl.classList.add('open'); grow(pl); }); else pl.classList.remove('open'); }
 
 /* player sheet */
-function curveSVG(m,l){ l=l??m.L.l; const v=sorted(m.arr); if(!v.length) return ''; const hi=barScale(m), B=40, bw=hi/B; const c=new Array(B).fill(0); for(const x of v){ if(x>=hi||x<0) continue; c[Math.floor(x/bw)]++; }
+function curveSVG(m,l,anim){ l=l??m.L.l; const v=sorted(m.arr); if(!v.length) return ''; const hi=barScale(m), B=40, bw=hi/B; const c=new Array(B).fill(0); for(const x of v){ if(x>=hi||x<0) continue; c[Math.floor(x/bw)]++; }
   const sm=c.map((_,i)=>(c[i-2]||0)*.1+(c[i-1]||0)*.2+c[i]*.4+(c[i+1]||0)*.2+(c[i+2]||0)*.1); const mx=Math.max(...sm)||1; const W=560,H=150,P=0;
   const X=x=>P+(x/hi)*(W-2*P), Y=y=>H-22-(y/mx)*(H-40); const pts=sm.map((y,i)=>[X((i+.5)*bw),Y(y)]);
   let d=`M${X(0)},${H-22}`; pts.forEach(p=>d+=` L${p[0].toFixed(1)},${p[1].toFixed(1)}`); d+=` L${X(hi)},${H-22} Z`;
   const lx=X(l); const side=pAt(m,l)>=.5?'over':'under'; const u=YDS.has(m.mk)?10:1;
   const ticks=[0,.25,.5,.75,1].map(f=>Math.round(hi*f/u)*u);
-  return `<svg class="curve" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Distribution of simulated ${esc(MK[m.mk].label)}">
+  return `<svg class="curve${anim?' anim':''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Distribution of simulated ${esc(MK[m.mk].label)}">
    <defs><clipPath id="cl"><rect x="${side==='over'?lx:0}" y="0" width="${side==='over'?W-lx:lx}" height="${H}"/></clipPath></defs>
    <path d="${d}" fill="var(--band)"/><path d="${d}" clip-path="url(#cl)" style="fill:color-mix(in srgb,var(--${side}) 32%,transparent)"/>
    <line x1="${lx}" x2="${lx}" y1="6" y2="${H-22}" stroke="var(--${side})" stroke-width="2"/>
@@ -1411,9 +1473,10 @@ function mountPlayer(el,pid,mkSel,full){ const p=D.players[pid]; const main=MAIN
   requestAnimationFrame(()=>slide(tabs.querySelector('[aria-selected="true"]'),true)); }
 function expandUnder(row,pid,mk){ let x=row.nextElementSibling; if(!x||!x.classList.contains('xacc')){ x=document.createElement('div'); x.className='xacc'; x.innerHTML='<div class="xin"></div>'; row.after(x); mountPlayer(x.firstChild,pid,mk,true); void x.offsetHeight; }
   const open=!x.classList.contains('open'); row.classList.toggle('on',open); if(open) raf2(()=>{ x.classList.add('open'); grow(x); }); else x.classList.remove('open'); }
-function lineSecs(m,l,anim){ const p=m.p, h=hits(p,m.mk,l); const hist=h.v.slice(0,10).reverse(); const hmax=Math.max(...hist,l,1)*1.15; const vs=(p.vs||[]).map(r=>logVal(r,m.mk)).filter(x=>x!=null);
-  return `<div class="sec"><h3>This season · ${h.k}/${h.n} over ${l}</h3>${hist.length?`<div class="games-hist">${hist.map(v=>`<div class="col"><div class="bar ${v>l?'hit':''}" style="height:${Math.max(3,v/hmax*64)}px${anim?';transform:scaleY(.02)" data-grow="scaleY(1)':''}" title="${v}"></div><span class="num">${v}</span></div>`).join('')}<div class="lnh" style="bottom:${18+l/hmax*64}px"></div></div>`:'<div class="sm muted">No games this season.</div>'}
-     <div class="qs num"><span>Likely range <b>${m.q.q25}–${m.q.q75}</b></span><span>10–90% <b>${m.q.q10}–${m.q.q90}</b></span></div>${vs.length?`<div class="sm muted" style="margin-top:6px">vs ${p.opp} since 2024: ${vs.join(', ')} (avg ${fmt1(vs.reduce((a,b)=>a+b,0)/vs.length)})</div>`:''}</div>`; }
+function lineSecs(m,l,anim){ const p=m.p, h=hits(p,m.mk,l);
+  const curve=`<div class="sec"><h3>Simulated outcomes</h3><div class="curvebox">${curveSVG(m,l,anim)}</div></div>`; const hist=h.v.slice(0,10).reverse(); const hmax=Math.max(...hist,l,1)*1.15; const vsR=(p.vs||[]).map(r=>({v:logVal(r,m.mk),rest:!!r.rest,d:r.date})).filter(x=>x.v!=null), vs=vsR.filter(x=>!x.rest).map(x=>x.v), vsRest=vsR.filter(x=>x.rest);   /* Nov 14: games where a playoff team rested its starters are shown but not counted */
+  return `${curve}<div class="sec"><h3>This season · ${h.k}/${h.n} over ${l}</h3>${hist.length?`<div class="games-hist">${hist.map(v=>`<div class="col"><div class="bar ${v>l?'hit':''}" style="height:${Math.max(3,v/hmax*64)}px${anim?';transform:scaleY(.02)" data-grow="scaleY(1)':''}" title="${v}"></div><span class="num">${v}</span></div>`).join('')}<div class="lnh" style="bottom:${18+l/hmax*64}px"></div></div>`:'<div class="sm muted">No games this season.</div>'}
+     <div class="qs num"><span>Likely range <b>${m.q.q25}–${m.q.q75}</b></span><span>10–90% <b>${m.q.q10}–${m.q.q90}</b></span></div>${vsR.length?`<div class="sm muted" style="margin-top:6px">vs ${p.opp} since 2024: ${vsR.map(x=>x.rest?`<s title="Starters rested (${esc(x.d)}): not counted">${x.v}</s>*`:x.v).join(', ')}${vs.length?` (avg ${fmt1(vs.reduce((a,b)=>a+b,0)/vs.length)})`:''}${vsRest.length?`<br><span class="xs">* ${vsRest.map(x=>esc(x.d)).join(', ')}: starters rested late in the season, so that game is left out of the average and the model.</span>`:''}</div>`:''}</div>`; }
 
 /* picks */
 let PF=store.get('pf',{side:'all',mode:'picks'});
@@ -1531,7 +1594,7 @@ function calChart(b){ if(!b.length) return '<div class="empty">Not enough graded
   return `<svg class="chart" style="max-width:420px;margin:0 auto" viewBox="0 0 ${W} ${H}" role="img" aria-label="Stated chance vs actual hit rate"><line x1="${X(.5)}" y1="${Y(.5)}" x2="${X(.9)}" y2="${Y(.9)}" stroke="var(--line-2)" stroke-dasharray="4 4"/>
    ${[.5,.6,.7,.8,.9].map(v=>`<text x="${X(v)}" y="${H-P+16}" text-anchor="middle">${Math.round(v*100)}</text>`).join('')}${[.4,.5,.6,.7,.8,.9].map(v=>`<text x="${P-6}" y="${Y(v)+4}" text-anchor="end">${Math.round(v*100)}</text>`).join('')}
    <line x1="${P}" x2="${W-10}" y1="${H-P}" y2="${H-P}" stroke="var(--line-2)"/>
-   <polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${b.map(x=>`${X(x.cl)},${Y(x.act)}`).join(' ')}"/>
+   <polyline class="draw" pathLength="1" fill="none" stroke="var(--accent)" stroke-width="2" points="${b.map(x=>`${X(x.cl)},${Y(x.act)}`).join(' ')}"/>
    ${b.map(x=>`<circle cx="${X(x.cl)}" cy="${Y(x.act)}" r="${3+Math.min(5,Math.sqrt(x.n)/6)}" fill="var(--accent)"><title>Stated ${Math.round(x.cl*100)}%, hit ${Math.round(x.act*100)}% (${x.n} props)</title></circle>`).join('')}</svg>`; }
 
 function howHTML(){ const d=D, L=d.league||{}, N_SIMS=N, MODEL_W=0.35, PROB_MODE='model';
@@ -1636,13 +1699,13 @@ function renderMore(){ if(TOOL&&TOOL_DEF[TOOL]) return renderTool();
    <div class="sec"><h3>About</h3><div class="card" style="padding:16px 18px;margin-bottom:22px"><p class="sm" style="margin:0 0 10px;color:var(--ink-2)">How the model works, this week's sources and recent model changes.</p><button type="button" class="btn ghost press" data-go="about">Open About</button></div></div>
    <div class="sec"><h3>Explanations</h3><div class="card" style="padding:16px 18px"><p class="sm" style="margin:0 0 10px;color:var(--ink-2)">Every prop has a <b>?</b> next to it that opens a plain-language reason for the projection and what the price needs. The full method, backtests and change log are on the About tab.</p><button type="button" class="btn ghost press" data-about>Read the full method</button></div></div></section>`; }
 function vt(fn){ if(document.startViewTransition&&!RM()) return document.startViewTransition(fn); fn(); return null; }
-function openTool(id,opt){ opt=opt||{}; if(!TOOL_DEF[id]) return; closePlayer(true); stopWatch();
+function openTool(id,opt){ document.documentElement.style.setProperty('--dir',0); opt=opt||{}; if(!TOOL_DEF[id]) return; closePlayer(true); stopWatch();
   if(opt.game){ TOOL_GAME=opt.game; store.set('tgame',opt.game); }
   TOOL_FROM=opt.from||null; const card=opt.card;
   if(card) card.style.viewTransitionName='toolcard';
   const go=()=>{ if(card) card.style.viewTransitionName=''; TOOL=id; VIEW='more'; store.set('view','more'); document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-current',b.dataset.v==='more'?'page':'false')); movePill(); renderTool(); window.scrollTo({top:0}); };
   vt(go); }
-function closeTool(){ const from=TOOL_FROM; stopWatch(); const hd=document.querySelector('.thero');
+function closeTool(){ document.documentElement.style.setProperty('--dir',0); const from=TOOL_FROM; stopWatch(); const hd=document.querySelector('.thero');
   if(from&&from.view==='slate'){ TOOL=null; TOOL_FROM=null; setView('slate',true); setTimeout(()=>{ const w=document.querySelector(`.gwrap[data-gw="${from.game}"]`); if(w&&!w.classList.contains('open')) toggleGame(w); },120); return; }
   const id=TOOL; if(hd) hd.style.viewTransitionName='toolcard';
   vt(()=>{ TOOL=null; TOOL_FROM=null; renderMore(); const c=document.querySelector(`[data-tool="${id}"]`); if(c){ c.style.viewTransitionName='toolcard'; c.scrollIntoView({block:'center'}); } });
@@ -2315,7 +2378,7 @@ function reload(){ Promise.all([fetch('data/week.json',{cache:'no-store'}).then(
 
 /* theme */
 function initTheme(){ const b=$('#themeBtn'); b.addEventListener('click',()=>{ const cur=document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'); const nx=cur==='dark'?'light':'dark';
-  const go=()=>{ document.documentElement.setAttribute('data-theme',nx); try{ localStorage.setItem('hm6:theme',JSON.stringify(nx)); }catch(e){} };
+  document.documentElement.style.setProperty('--dir',0); const go=()=>{ document.documentElement.setAttribute('data-theme',nx); try{ localStorage.setItem('hm6:theme',JSON.stringify(nx)); }catch(e){} };
   if(document.startViewTransition&&!RM()) document.startViewTransition(go); else go(); }); }
 
 function boot(){ $('#wk').textContent=`Week ${D.week} · ${D.season}`; setView(VIEW,false); FROWS=null; simAll(()=>{ if(VIEW==='picks') renderPicks(); if(VIEW==='slate') prebuildGames(); }); }
@@ -2328,6 +2391,7 @@ Promise.all([fetch('data/week.json',{cache:'no-store'}).then(r=>r.json()),fetch(
  .then(([w,l])=>{ D=w; LOG=l; CAL=w.calibration||CAL; if(document.fonts&&document.fonts.ready) document.fonts.ready.then(movePill); boot(); })
  .catch(e=>{ $('#main').innerHTML=`<div class="empty">Couldn't load this week's data (${esc(e.message)}). Reload the page to try again.</div>`; });
 })();
+
 
 </script>
 
