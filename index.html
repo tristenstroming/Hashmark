@@ -798,6 +798,65 @@ html{scrollbar-gutter:stable}
 /* stat tiles settle in */
 .pn > div{animation:fallIn .4s var(--exp) both} .pn > div:nth-child(2){animation-delay:.05s} .pn > div:nth-child(3){animation-delay:.1s}
 .tile{animation:fallIn .45s var(--exp) both} .tiles .tile:nth-child(2){animation-delay:.05s} .tiles .tile:nth-child(3){animation-delay:.1s} .tiles .tile:nth-child(4){animation-delay:.15s}
+
+/* ===== v6.13 (Nov 15): quieter slate, Simple / Advanced filter ===== */
+/* Slate, light touch: thinner team accents that wake on hover, numbers on hairlines instead of boxed chips, calmer footer */
+.game{padding:19px 20px 17px;box-shadow:none}
+.game::before{height:2px;opacity:.5;transition:opacity .35s}
+@media (hover:hover){ .game:hover::before{opacity:1} }
+.gwrap.open .game::before{opacity:1}
+.games{gap:12px}
+.slot{margin-bottom:32px}
+.slot h2{letter-spacing:.12em;font-size:13px;color:var(--muted)}
+.gfoot{font-size:12px}
+.gfoot .mkt .lean{color:var(--ink-2);font-weight:600}
+.wp{height:3px}
+.status{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.kstats{gap:0}
+.kstats button{border:0;background:none;border-radius:0;box-shadow:none;padding:2px 20px;min-width:0;border-left:1px solid var(--line)}
+.kstats button:first-child{border-left:0;padding-left:4px}
+.kstats button:last-child{padding-right:4px}
+.kstats button:hover{transform:none;border-color:var(--line)}
+.kstats button:hover b{color:var(--accent)}
+.kstats b{font-size:26px;transition:color .2s}
+@media (max-width:760px){ .kstats{width:100%} .kstats button{flex:1 1 0;min-width:0;padding:2px 10px} .kstats b{font-size:21px} .kstats span{font-size:10px;letter-spacing:.03em;white-space:nowrap} }
+.gpick{background:none;border-radius:0;border-top:1px solid var(--line);padding:9px 2px 0;margin-top:2px}
+.vhead h1{letter-spacing:.01em}
+.vhact{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* Filter: the Simple / Advanced choice */
+.fchoice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px;max-width:720px;margin:8vh auto 0}
+.fopt{display:flex;flex-direction:column;align-items:flex-start;gap:9px;text-align:left;padding:28px 26px 24px;position:relative;overflow:hidden;animation:fallIn .5s var(--exp) both;animation-delay:calc(var(--i)*90ms);transition:transform .25s var(--ease),border-color .2s,box-shadow .3s}
+.fopt::before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,var(--accent),transparent 75%);opacity:.6;transition:opacity .3s}
+.fopt b{font:700 28px/1 var(--disp);text-transform:uppercase;letter-spacing:.02em}
+.fopt span{color:var(--muted);font-size:13.5px;line-height:1.55;max-width:36ch}
+.fopt i{font-style:normal;margin-top:4px;color:var(--accent);font-weight:700;font-size:17px;transition:transform .25s var(--ease)}
+@media (hover:hover){ .fopt:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--line-2)} .fopt:hover::before{opacity:1} .fopt:hover i{transform:translateX(5px)} }
+.fopt:active{transform:scale(.985)}
+
+/* Filter, simple: one search box, one card per player */
+.ssearch{position:relative;max-width:560px;margin:2px auto 0}
+.ssearch svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
+.ssearch input{width:100%;border:1px solid var(--line-2);background:var(--panel);border-radius:14px;padding:14px 18px 14px 46px;font-size:16px;box-shadow:var(--shadow);transition:border-color .2s,box-shadow .25s}
+.ssearch input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+#sres{max-width:600px;margin:16px auto 0;display:flex;flex-direction:column;gap:12px}
+.shead{text-align:center;letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin:4px 0 0}
+.scard{display:block;width:100%;text-align:left;padding:15px 18px 9px;animation:fallIn .45s var(--exp) both;animation-delay:calc(var(--i,0)*60ms);transition:transform .22s var(--ease),border-color .2s,box-shadow .25s;-webkit-tap-highlight-color:transparent}
+@media (hover:hover){ .scard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--line-2)} .scard:hover .chev{transform:translateX(3px)} }
+.scard:active{transform:scale(.99)}
+.scard.lifted{opacity:0;transition:none}
+.scard .plc-h{display:flex;align-items:center;gap:12px;min-width:0}
+.scard .av{width:38px;height:38px;border-radius:12px;background:var(--tc);color:#fff;display:grid;place-items:center;font:700 14px/1 var(--disp);letter-spacing:.04em;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.scard .sc-t{min-width:0;display:flex;flex-direction:column;gap:1px}
+.scard .sc-t b{font-size:16px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scard .chev{margin-left:auto;width:18px;height:18px;color:var(--muted);flex:0 0 auto;transition:transform .25s var(--ease)}
+.scard .sc-rows{margin-top:9px}
+.scard .st{padding:8px 0;border-top:1px solid var(--line)}
+.sempty{text-align:center;color:var(--muted);padding:44px 0 20px;font-size:14px;line-height:1.6;animation:rise .4s var(--ease) both}
+.shint{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:560px;margin:0 auto}
+.shint .chip{animation:fallIn .4s var(--exp) both;animation-delay:calc(var(--i,0)*45ms)}
+@media (max-width:560px){ .fchoice{margin-top:3vh} .fopt{padding:22px 20px 20px} .fopt b{font-size:24px} .ssearch input{font-size:16px;padding:13px 16px 13px 44px} .scard{padding:13px 14px 8px} }
+
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} }
 </style>
 
@@ -1510,7 +1569,62 @@ function renderAlt(){ const rows=[]; const now=Date.now();
    <div class="card">${rows.length?rows.slice(0,80).map(r=>`<button type="button" class="plk press" data-p="${r.pid}" data-mk="${r.m.mk}"><div class="who"><b>${esc(r.p.name)}</b><span class="xs muted">${r.p.team} ${r.p.pos} · ${esc(r.g.key)} · ${dayShort(r.g)} ${fmtTime(r.g.time)}</span></div><div class="mid"><div class="bet">${r.k}+ ${esc(MK[r.m.mk].unit)}</div><span class="xs muted num">hit ${r.h.k}/${r.h.n} games · proj ${r.m.q.q50}</span></div><div class="r"><span class="pc num">${pct(r.pr)}</span><span class="xs muted num">fair ${amer(r.pr)}</span></div></button>`).join(''):'<div class="empty">No alt lines meet the bar yet.</div>'}</div>`;
   $('#pbox').querySelectorAll('.plk').forEach(b=>b.addEventListener('click',()=>expandUnder(b,b.dataset.p,b.dataset.mk))); }
 
-/* filter: quick chips */
+/* ===== v6.13 (Nov 15): the Filter tab opens with a choice — Simple (type a name, get one card) or Advanced (the full board) ===== */
+let FMODE=store.get('fmode',null), SQ=store.get('sq','');
+function renderFilter(){ if(FMODE==='simple') return renderFilterSimple(); if(FMODE==='adv') return renderFilterAdv(); renderFilterChoice(); }
+function setFMode(m){ FMODE=m; store.set('fmode',m); const run=()=>{ renderFilter(); window.scrollTo({top:0}); }; if(document.startViewTransition&&!RM()) document.startViewTransition(run); else run(); }
+const fmSeg=()=>`<div class="seg" id="fmSeg"><button type="button" data-fm="simple" aria-pressed="${FMODE==='simple'}">Simple</button><button type="button" data-fm="adv" aria-pressed="${FMODE==='adv'}">Advanced</button></div>`;
+const bindFm=()=>{ const sg=$('#fmSeg'); if(sg) sg.querySelectorAll('[data-fm]').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.fm!==FMODE) setFMode(b.dataset.fm); })); };
+function renderFilterChoice(){
+  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Filter</h1><p>Two ways into the board. Pick one — the toggle at the top switches any time.</p></div></div>
+   <div class="fchoice">
+    <button type="button" class="card fopt press" data-fm="simple" style="--i:0"><b>Simple</b><span>Type a player or a team and get one clean card: the props, the model's side and the DraftKings line.</span><i aria-hidden="true">→</i></button>
+    <button type="button" class="card fopt press" data-fm="adv" style="--i:1"><b>Advanced</b><span>Every prop on the board, with chips for stat, side, position and game, sliders and sorting.</span><i aria-hidden="true">→</i></button>
+   </div></section>`;
+  $('#main').querySelectorAll('[data-fm]').forEach(b=>b.addEventListener('click',()=>setFMode(b.dataset.fm))); }
+/* the players still to play this week */
+function spPool(){ const now=Date.now(), out=[];
+  for(const [pid,p] of Object.entries(D.players)){ if(p.status==='OUT') continue; const g=D.games.find(x=>x.id===p.game); if(!g||kick(g)<now) continue; if(p.pos==='QB'&&p.name!==qbOf(g.teams[p.team])) continue; out.push([pid,p,g]); }
+  return out; }
+const spVol=p=>{ const a=p.avg||{}; return (a.rec_yds||0)+(a.rush_yds||0)+(a.pass_yds||0)/3; };
+function scard(pid,g,i,np){ const p=D.players[pid]; const main=MAIN_POS[p.pos]||[];
+  let ms=marketsFor(pid).filter(m=>main.includes(m.mk)&&(m.q||m.mk==='ATD'));
+  ms.sort((a,b)=>((p.lines&&p.lines[a.mk])?0:1)-((p.lines&&p.lines[b.mk])?0:1)||main.indexOf(a.mk)-main.indexOf(b.mk));
+  ms=ms.slice(0,np||4); if(!ms.length) return '';
+  const rows=ms.map(m=>m.mk==='ATD'
+    ?`<div class="st" data-mk="ATD"><span class="lb">Anytime TD</span><div></div><div class="nm"><span class="p"><span class="side over">${pct(m.po)} to score</span>${pickTag(m)}</span><span class="l num">${p.lines&&p.lines.ATD&&p.lines.ATD.ov!=null?'DK '+fmtO(p.lines.ATD.ov):'fair '+amer(m.po)}</span></div></div>`
+    :`<div class="st" data-mk="${m.mk}"><span class="lb">${esc(MK[m.mk].label)}</span>${rangeBar(m,'static')}<div class="nm"><span class="p num">${sideTxt(m)}${pickTag(m)}</span><span class="l num">${lineNote(m)}</span></div></div>`).join('');
+  const opp=p.team===g.home?g.away:g.home, home=p.team===g.home;
+  return `<button type="button" class="card scard press" data-sp="${pid}" style="--i:${Math.min(i,8)}" aria-label="${esc(p.name)}: open player card">
+   <div class="plc-h"><span class="av" style="--tc:${TEAMC[p.team]||'#888'}">${esc(initials(p.name))}</span><div class="sc-t"><b>${esc(p.name)}</b><span class="xs muted">${p.pos} · ${esc(TEAMN[p.team]||p.team)} ${home?'vs':'at'} ${esc(TEAMN[opp]||opp)} · ${dayShort(g)} ${fmtTime(g.time)}</span></div>${statusTag(p)}<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></div>
+   <div class="sc-rows">${rows}</div></button>`; }
+function drawSimple(){ const box=$('#sres'); if(!box) return; const q=SQ.trim().toLowerCase(); store.set('sq',SQ);
+  if(!q){ const seen=new Set(), sug=[];
+    for(const x of weekPicks().filter(x=>!x.result).sort((a,b)=>b.edge-a.edge)){ if(!seen.has(x.name)&&D.players[x.pid]){ seen.add(x.name); sug.push(x.name); } if(sug.length>=6) break; }
+    if(sug.length<8) for(const [pid,p] of spPool().sort((a,b)=>spVol(b[1])-spVol(a[1]))){ if(!seen.has(p.name)){ seen.add(p.name); sug.push(p.name); } if(sug.length>=8) break; }
+    box.innerHTML=`<div class="sempty"><p class="sm muted" style="margin:0 0 14px">Start typing, or try one of these.</p><div class="shint">${sug.map((n,i)=>`<button type="button" class="chip press" data-sq="${esc(n)}" style="--i:${i}">${esc(n)}</button>`).join('')}</div></div>`;
+    return; }
+  const pool=spPool(); let html='';
+  const pm=pool.filter(([pid,p])=>p.name.toLowerCase().includes(q));
+  pm.sort((a,b)=>((a[1].name.toLowerCase().startsWith(q)?0:1)-(b[1].name.toLowerCase().startsWith(q)?0:1))||spVol(b[1])-spVol(a[1]));
+  if(pm.length) html=pm.slice(0,5).map((x,i)=>scard(x[0],x[2],i,4)).join('');
+  else { const qU=q.toUpperCase(); let team=TEAMC[qU]?qU:null;
+    if(!team) for(const [ab,nm] of Object.entries(TEAMN)) if(nm.toLowerCase().includes(q)){ team=ab; break; }
+    if(team){ const tp=pool.filter(([pid,p])=>p.team===team).sort((a,b)=>spVol(b[1])-spVol(a[1])).slice(0,8);
+      html=tp.length?`<div class="shead xs muted">${esc(TEAMN[team]||team)} · this week</div>`+tp.map((x,i)=>scard(x[0],x[2],i,3)).join(''):''; } }
+  box.innerHTML=html||`<div class="sempty">No one still to play this week matches “${esc(SQ)}”.<br><span class="xs muted">Players whose games already kicked off are left out.</span></div>`;
+  grow(box); }
+function renderFilterSimple(){
+  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Filter</h1><p>One player, one card. Tap a card for the full breakdown and the line slider.</p></div>${fmSeg()}</div>
+   <div class="ssearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="sQ" type="search" placeholder="Search a player or team" value="${esc(SQ)}" autocomplete="off" aria-label="Search a player or team"></div>
+   <div id="sres"></div></section>`;
+  bindFm(); const inp=$('#sQ'); let t=0;
+  inp.addEventListener('input',()=>{ SQ=inp.value; clearTimeout(t); t=setTimeout(drawSimple,160); });
+  $('#sres').addEventListener('click',e=>{ const c=e.target.closest('[data-sq]'); if(c){ SQ=c.dataset.sq; inp.value=SQ; drawSimple(); return; }
+    const sc=e.target.closest('.scard'); if(sc){ const st=e.target.closest('.st'); openPlayer(sc.dataset.sp, st?st.dataset.mk:undefined, sc); } });
+  drawSimple(); if(!SQ&&matchMedia('(hover:hover)').matches) inp.focus({preventScroll:true}); }
+
+/* filter, advanced: quick chips */
 const FL_DEF={stat:'all',side:'any',pos:'any',game:'all',picks:false,dk:true,hideQ:false,minP:55,minH:0,sort:'p',q:''};
 let FL=Object.assign({},FL_DEF,store.get('fl',{})), FROWS=null, FSHOW=40;
 const FGRP={all:null,pass:['PY','PC','PA','PTD','PRY'],rush:['RY','CAR','RRY'],recy:['RECY'],rec:['REC'],td:['ATD'],long:['LR','LRU']};
@@ -1520,10 +1634,10 @@ function filterRows(){ if(FROWS) return FROWS; const now=Date.now(), R=[];
       const h=hits(p,m.mk,td?.5:m.L.l), hr=h.n?(over?h.k:h.n-h.k)/h.n:null, lp=logged(pid,m.mk);
       R.push({pid,p,g,m,td,over,pr,dk,price,edge:dk?pr-implied(price??-110):null,h,hr,pick:!!(lp&&lp.tier==='pick'),k:kick(g),pos:p.pos==='FB'?'RB':p.pos}); } }
   return FROWS=R; }
-function renderFilter(){ const games=D.games.slice().sort((a,b)=>kick(a)-kick(b)).filter(g=>kick(g)>Date.now());
+function renderFilterAdv(){ const games=D.games.slice().sort((a,b)=>kick(a)-kick(b)).filter(g=>kick(g)>Date.now());
   const chips=(key,opts)=>`<div class="chips${opts.length>7?' scroll':''}" data-f="${key}">${opts.map(([v,t])=>`<button type="button" class="chip press" data-val="${v}" aria-pressed="${String(FL[key])===String(v)}">${t}</button>`).join('')}</div>`;
   const tog=(key,t)=>`<button type="button" class="chip press" data-tog="${key}" aria-pressed="${!!FL[key]}">${t}</button>`;
-  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Filter</h1><p>Every prop on the board. Tap chips to narrow it down; the list updates as you go. Tap a result to open the full breakdown.</p></div><button type="button" class="btn ghost press" id="fReset">Reset</button></div>
+  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Filter</h1><p>Every prop on the board. Tap chips to narrow it down; the list updates as you go. Tap a result to open the full breakdown.</p></div><div class="vhact">${fmSeg()}<button type="button" class="btn ghost press" id="fReset">Reset</button></div></div>
    <div class="card fbox" id="fbox">
      <div class="frow"><span class="fl">Stat</span>${chips('stat',[['all','All'],['pass','Passing'],['rush','Rushing'],['recy','Rec yards'],['rec','Catches'],['td','Touchdowns'],['long','Longest play']])}</div>
      <div class="frow"><span class="fl">Side</span>${chips('side',[['any','Either'],['over','Overs'],['under','Unders']])}</div>
@@ -1536,13 +1650,14 @@ function renderFilter(){ const games=D.games.slice().sort((a,b)=>kick(a)-kick(b)
    </div>
    <div class="fhead"><span class="sm muted num" id="fCount"></span><div class="seg" id="fSort">${[['p','Most likely'],['edge','Best edge'],['kick','Kickoff']].map(([v,t])=>`<button type="button" data-sort="${v}" aria-pressed="${FL.sort===v}">${t}</button>`).join('')}</div></div>
    <div class="card" id="fres"><div class="empty">Crunching every prop…</div></div><div style="text-align:center;margin-top:14px"><button type="button" class="btn ghost press" id="fMore" hidden>Show more</button></div></section>`;
+  bindFm();
   const lab=()=>{ $('#fMinPv').textContent=FL.minP+'%+'; $('#fMinHv').textContent=FL.minH>0?FL.minH+'%+ of games':'Any'; $('#fMinP').style.setProperty('--v',(FL.minP-50)/40*100+'%'); $('#fMinH').style.setProperty('--v',FL.minH+'%'); };
   let raf=0; const upd=()=>{ store.set('fl',FL); lab(); cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>drawFilter(true)); };
   $('#fbox').addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(!c) return; if(c.dataset.tog){ FL[c.dataset.tog]=!FL[c.dataset.tog]; c.setAttribute('aria-pressed',FL[c.dataset.tog]); } else { const grp=c.parentElement, key=grp.dataset.f; FL[key]=c.dataset.val; grp.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false')); } FSHOW=40; upd(); });
   $('#fMinP').addEventListener('input',e=>{ FL.minP=+e.target.value; FSHOW=40; upd(); }); $('#fMinH').addEventListener('input',e=>{ FL.minH=+e.target.value; FSHOW=40; upd(); });
   $('#fQ').addEventListener('input',e=>{ FL.q=e.target.value; FSHOW=40; upd(); });
   $('#fSort').addEventListener('click',e=>{ const b=e.target.closest('[data-sort]'); if(!b) return; FL.sort=b.dataset.sort; $('#fSort').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false')); upd(); });
-  $('#fReset').addEventListener('click',()=>{ FL=Object.assign({},FL_DEF); store.set('fl',FL); FSHOW=40; renderFilter(); });
+  $('#fReset').addEventListener('click',()=>{ FL=Object.assign({},FL_DEF); store.set('fl',FL); FSHOW=40; renderFilterAdv(); });
   $('#fMore').addEventListener('click',()=>{ FSHOW+=40; drawFilter(false); });
   $('#fres').addEventListener('click',e=>{ const b=e.target.closest('.plk'); if(b) expandUnder(b,b.dataset.p,b.dataset.mk); });
   lab(); setTimeout(()=>drawFilter(true),30); }
