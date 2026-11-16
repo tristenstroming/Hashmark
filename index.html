@@ -1053,7 +1053,7 @@ function wxOf(g,noEdits){ if(g.roof==='dome') return {wf:1,rf:1,pf:1,dome:true};
 const lastName=n=>String(n).replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/,'').split(' ').slice(-1)[0];
 let QBSEL=store.get('qb',{});
 const qbOf=tm=>(QBSEL[tm.team]&&tm.scen[QBSEL[tm.team]])?QBSEL[tm.team]:tm.qb_default;
-function sim(g){ if(!SIM[g.id]){ const qb={}; for(const t of Object.values(g.teams)) qb[t.team]=qbOf(t); SIM[g.id]=HMSim.simulate(g,{n:N,seed:(+g.id)%100000+7,mode:'model',wx:wxOf(g),qb}); } return SIM[g.id]; }
+function sim(g){ if(!SIM[g.id]){ const qb={}; for(const t of Object.values(g.teams)) qb[t.team]=qbOf(t); SIM[g.id]=HMSim.simulate(g,{n:g.sims||N,seed:(+g.id)%100000+7,mode:'model',wx:wxOf(g),qb});   /* g.sims: per-game count (Nov 15: SNF at 50,000 on Tristen's ask) */ } return SIM[g.id]; }
 function simAll(done){ const q=D.games.filter(g=>!SIM[g.id]).sort((a,b)=>kick(a)-kick(b)); const step=()=>{ const g=q.shift(); if(!g){ done&&done(); return; } sim(g); fillGame(g); (window.requestIdleCallback||setTimeout)(step,{timeout:60}); }; step(); }
 function arrFor(o,mk){ switch(mk){case'PY':return o.py;case'PC':return o.cmp;case'PA':return o.att;case'PTD':return o.ptd;case'RY':return o.ry;case'CAR':return o.car;case'RECY':return o.recy;case'REC':return o.rec;case'ATD':return o.td;case'LR':return o.lrec;case'LRU':return o.lru;
   case'RRY':return o._rry||(o._rry=HMSim.sum2(o.ry,o.recy));case'PRY':return o.py?(o._pry||(o._pry=HMSim.sum2(o.py,o.ry))):null;} return null; }
@@ -1290,7 +1290,7 @@ function movePill(){ const nav=$('#nav'), b=nav.querySelector('[aria-current="pa
 function slotName(g){ const h=+g.time.split(':')[0]; if(g.day==='Sunday') return h<12?'Sunday morning':h<16?'Sunday early':h<19?'Sunday late':'Sunday night'; return g.day+' night'; }
 function renderSlate(){ const gs=D.games.slice().sort((a,b)=>kick(a)-kick(b)); const slots=[]; for(const g of gs){ const k=slotName(g)+'|'+g.date; let s=slots.find(x=>x.k===k); if(!s) slots.push(s={k,name:slotName(g),games:[]}); s.games.push(g); }
   const nLines=D.games.filter(g=>g.props_live).length; GI=0;
-  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Week ${D.week}</h1><p>Each game played out ${N.toLocaleString()} times. Tap a game to open it: projected score, every player's range against the DraftKings line, and the reason behind each number.</p></div>
+  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Week ${D.week}</h1><p>Each game played out ${N.toLocaleString()} times${(D.games.some(g=>g.sims>N))?` (${D.games.filter(g=>g.sims>N).map(g=>g.key).join(', ')}: ${Math.max(...D.games.map(g=>g.sims||0)).toLocaleString()})`:''}. Tap a game to open it: projected score, every player's range against the DraftKings line, and the reason behind each number.</p></div>
     <div class="khead">${seasonStats()}<div class="xs muted num">${D.games.length} games · ${nLines} with player lines${D.byes&&D.byes.length?` · bye: ${D.byes.join(', ')}`:''}</div></div></div>
     ${slots.map(s=>`<div class="slot"><h2>${esc(s.name)} · ${esc(s.games[0].day.slice(0,3))} ${esc(s.games[0].date.slice(5).replace('-','/'))}</h2><div class="games">${s.games.map(gameCard).join('')}</div></div>`).join('')}</section>`;
   D.games.forEach(g=>{ if(SIM[g.id]) fillGame(g); });
@@ -1353,7 +1353,7 @@ function gameView(g){ let team=g.away;
       <div><span class="k">Total</span><span class="v num">${fmt1(s.total)}</span><span class="s num">DK ${dk?dk.total:'—'}${tLean?' · '+tLean:''}</span></div></div></div>
    <p class="sm muted" style="margin:12px 4px 0">${esc(g.stadium||'')} · ${esc(wx)}</p>
    ${(()=>{ const gp=gamePicks(g); return gp.length?`<div class="sec"><h3>Model picks in this game · ${gp.length}</h3><div class="tpicks">${gp.slice(0,8).map(x=>`<button type="button" class="tpick press" data-jump="${x.pid}" data-jmk="${x.mk}"><span class="side ${x.mk==='ATD'?'over':x.side}">${esc(pickTxt(x))}</span><b class="num">${pct(pickP(x))}</b><span class="xs muted num">${x.price_est?'−110 est':fmtO(x.price)} · edge ${sg(x.edge*100)}</span></button>`).join('')}</div></div>`:''; })()}
-   ${qbsw?`<div class="sec"><h3>What if</h3><div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">${qbsw}<span class="xs muted">Switching the quarterback re-runs this game's ${N.toLocaleString()} simulations. Weather what-ifs are under More on this game.</span></div></div>`:''}
+   ${qbsw?`<div class="sec"><h3>What if</h3><div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">${qbsw}<span class="xs muted">Switching the quarterback re-runs this game's ${(g.sims||N).toLocaleString()} simulations. Weather what-ifs are under More on this game.</span></div></div>`:''}
    ${qbn||outs?`<div class="sec"><h3>News</h3><div class="note outs">${qbn}${outs}</div></div>`:''}
    <div class="sec"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><h3 style="margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Players</h3>
      <div class="seg" id="tmSeg"><button type="button" data-t="${g.away}" aria-pressed="${team===g.away}">${TEAMN[g.away]}</button><button type="button" data-t="${g.home}" aria-pressed="${team===g.home}">${TEAMN[g.home]}</button></div></div>
@@ -2429,12 +2429,12 @@ function wBoxScore(st){
 
 
 function toolWatch(el){ const g=curGame(); if(!g){ el.innerHTML='<div class="empty">No games this week.</div>'; return; }
-  el.innerHTML=`<div class="tctl">${gameChips()}</div><p class="sm muted tnote">One game played out snap by snap from this week’s projections (${esc(gameKey(g))}). The props come from ${N.toLocaleString()} of these, so a single game will often look nothing like the average.</p>${watchHtml(g)}`;
+  el.innerHTML=`<div class="tctl">${gameChips()}</div><p class="sm muted tnote">One game played out snap by snap from this week’s projections (${esc(gameKey(g))}). The props come from ${(g.sims||N).toLocaleString()} of these, so a single game will often look nothing like the average.</p>${watchHtml(g)}`;
   startWatch(g); }
 
 /* ---------- QB and weather what-ifs ---------- */
 const SIMB={};
-function baseSimOf(g){ if(!SIMB[g.id]){ const qb={}; for(const t of Object.values(g.teams)) qb[t.team]=t.qb_default; SIMB[g.id]=HMSim.simulate(g,{n:N,seed:(+g.id)%100000+7,mode:'model',wx:wxOf(g,true),qb}); } return SIMB[g.id]; }
+function baseSimOf(g){ if(!SIMB[g.id]){ const qb={}; for(const t of Object.values(g.teams)) qb[t.team]=t.qb_default; SIMB[g.id]=HMSim.simulate(g,{n:g.sims||N,seed:(+g.id)%100000+7,mode:'model',wx:wxOf(g,true),qb}); } return SIMB[g.id]; }
 const isWhatIf=g=>{ for(const t of Object.values(g.teams)) if(qbOf(t)!==t.qb_default) return true; const e=WXSEL[g.id]; return !!(e&&Object.keys(e).length); };
 function resimGame(g){ delete SIM[g.id]; FROWS=null; const w=document.querySelector(`.gwrap[data-gw="${g.id}"]`); if(w) delete w.dataset.f; fillGame(g); }
 function toolWhatif(el){ const g=curGame(); if(!g){ el.innerHTML='<div class="empty">No games this week.</div>'; return; }
@@ -2452,7 +2452,7 @@ function toolWhatif(el){ const g=curGame(); if(!g){ el.innerHTML='<div class="em
   el.innerHTML=`<div class="tctl">${gameChips()}</div>
    <div class="grid2 wi"><div class="card wi-box"><h4>Change the game</h4>${qbsw}
       ${dome?'<p class="sm muted" style="margin:6px 0 0">Played indoors, so weather doesn’t apply.</p>':`${sl('wind','Wind',0,40,1,' mph')}${sl('precip','Chance of rain',0,100,5,'%')}${sl('temp','Temperature',0,100,1,'°')}`}
-      <div class="wi-act"><button type="button" class="btn ghost press" id="wiReset" ${changed?'':'disabled'}>Back to the real game</button><span class="xs muted">Each change re-runs this game’s ${N.toLocaleString()} simulations and carries through the whole app until you reset it.</span></div></div>
+      <div class="wi-act"><button type="button" class="btn ghost press" id="wiReset" ${changed?'':'disabled'}>Back to the real game</button><span class="xs muted">Each change re-runs this game’s ${(g.sims||N).toLocaleString()} simulations and carries through the whole app until you reset it.</span></div></div>
     <div class="card wi-box"><h4>${changed?'What-if vs the real projection':'Projection'}</h4>
       <div class="wi-sc"><div>${chip(g.away)}<b class="num">${Math.round(s1.a)}</b>${changed?dd(s0.a,s1.a,.5):''}</div><div>${chip(g.home)}<b class="num">${Math.round(s1.h)}</b>${changed?dd(s0.h,s1.h,.5):''}</div></div>
       <div class="mrow"><div><span class="k">Winner</span><span class="v">${s1.wh>=.5?g.home:g.away}</span><span class="s num">${pct(Math.max(s1.wh,1-s1.wh))}${changed?` · was ${s0.wh>=.5?g.home:g.away} ${pct(Math.max(s0.wh,1-s0.wh))}`:''}</span></div><div><span class="k">Total</span><span class="v num">${fmt1(s1.a+s1.h)}</span><span class="s num">${changed?'was '+fmt1(s0.a+s0.h):g.market.dk?'DK '+g.market.dk.total:''}</span></div><div><span class="k">Weather</span><span class="v" style="font-size:16px">${dome?'Indoors':wxOf(g).wf<.995?'−'+Math.round((1-wxOf(g).wf)*100)+'% pass':'No effect'}</span><span class="s">${dome?'':'on passing'}</span></div></div></div></div>
