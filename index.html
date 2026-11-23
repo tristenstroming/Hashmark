@@ -1613,6 +1613,103 @@ html.stg-on .stg-scrim{opacity:.74}
 /* focus rings on cards only for keyboard users */
 html:not(.kbd) .game.ev:focus-visible{box-shadow:inset 0 1px 0 var(--hl),var(--shadow)}
 html:not(.kbd) .ft:focus-visible{outline:none}
+/* ===== v12 (Nov 23): big game cards are the slate; game status on every card; the list in an "All games" dropdown ===== */
+:root{--st-up:#6a55d8;--st-live:#e0284a;--st-done:#b86e00;--st-gr:#0f9a52}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){--st-up:#b9a8ff;--st-live:#ff5d70;--st-done:#fbbf24;--st-gr:#3ddc84} }
+:root[data-theme="dark"]{--st-up:#b9a8ff;--st-live:#ff5d70;--st-done:#fbbf24;--st-gr:#3ddc84}
+/* the cards are always dark, so they carry the bright set */
+.ft{--st-up:#cdc2ff;--st-live:#ff6b7d;--st-done:#fcd34d;--st-gr:#4ade80}
+[data-st="up"]{--sc:var(--st-up)} [data-st="live"]{--sc:var(--st-live)} [data-st="done"]{--sc:var(--st-done)} [data-st="graded"]{--sc:var(--st-gr)}
+.feat{margin:0 0 18px}
+/* room after the last card so it can line up with the others instead of sitting against the right edge */
+/* the track runs to the screen edges (gutter kept as padding) and leaves room below, so card shadows aren't cut off */
+.ft-track{padding-bottom:44px;margin-bottom:-28px}
+@media (max-width:560px){ .ft-track{margin-inline:calc(-1 * var(--gut-l)) calc(-1 * var(--gut-r));padding-inline:var(--gut-l) var(--gut-r);scroll-padding-inline:var(--gut-l) var(--gut-r)} .ft-track::after{content:"";flex:0 0 calc(12% - 14px)} }
+/* wider screens: the card in front sits in the middle, its neighbours peek on both sides, dimmed */
+@media (min-width:561px){
+  .ft{flex-basis:min(calc(100% - 120px),680px);scroll-snap-align:center;transition:transform .4s var(--exp),box-shadow .4s,scale .55s var(--exp),opacity .55s var(--exp)}
+  .ft-track::before,.ft-track::after{content:"";flex:0 0 calc((100% - min(calc(100% - 120px),680px)) / 2 - 18px)}
+  .ft:not(.cur){scale:.93;opacity:.5}
+  .ft:not(.cur) .ft-go{visibility:hidden}
+}
+.ft-in{gap:11px}
+.ft-top{display:flex;align-items:center;gap:10px;min-width:0}
+.ft-top .ft-k{flex:1 1 auto;min-width:0;display:block;-webkit-line-clamp:unset;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gs-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;font:700 10.5px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+  color:#fff;background:color-mix(in oklab,var(--sc) 22%,rgba(8,6,20,.55));box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--sc) 60%,transparent)}
+.gs-badge svg{width:13px;height:13px;color:var(--sc)}
+.gs-pulse{position:relative;width:8px;height:8px;margin:0 2px;border-radius:50%;background:var(--sc)}
+.gs-pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--sc);animation:gsPulse 1.6s cubic-bezier(.2,.7,.3,1) infinite}
+@keyframes gsPulse{from{transform:scale(.4);opacity:.9}to{transform:scale(1.5);opacity:0}}
+/* four-step track: Ungraded → In progress → Completed → Graded */
+.ft-prog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;max-width:460px;margin-top:2px}
+.ft-prog > span{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ft-prog i{display:block;height:4px;border-radius:3px;background:rgba(255,255,255,.16);overflow:hidden;position:relative}
+.ft-prog .on i::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(255,255,255,.72);transform-origin:0 50%;animation:fpFill .55s var(--exp) both;animation-delay:calc(.28s + var(--k) * .1s)}
+.ft-prog .cur i::before{background:var(--sc);box-shadow:0 0 10px var(--sc)}
+.ft[data-st="live"] .ft-prog .cur i::before{animation:fpFill .55s var(--exp) both,fpLive 1.6s ease-in-out .9s infinite;animation-delay:calc(.28s + var(--k) * .1s),.9s}
+@keyframes fpFill{from{transform:scaleX(0)}to{transform:none}}
+@keyframes fpLive{50%{opacity:.45}}
+.ft-prog b{font:600 10.5px/1.15 var(--body);color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft-prog .on b{color:rgba(255,255,255,.78)} .ft-prog .cur b{color:#fff;font-weight:700}
+.ft-foot{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin-top:2px}
+.ft-bets{display:inline-flex;align-items:center;gap:9px;min-width:0;font-size:13px;line-height:1.3;color:rgba(255,255,255,.86)}
+.ft-bets b{font-weight:700;color:#fff} .ft-bets b.pos{color:#4ade80} .ft-bets b.neg{color:#ff8b9b}
+.ft-sub{color:rgba(255,255,255,.62)}
+.ft-wl{flex:0 0 auto;width:38px;height:6px;border-radius:4px;background:#ff8b9b;overflow:hidden}
+.ft-wl i{display:block;height:100%;background:#4ade80}
+.ft-foot .ft-go{align-self:auto;margin-left:auto}
+.ft-ok{color:#4ade80;font-weight:650} .ft-no{color:#ff8b9b;font-weight:650}
+.ft[data-fin="1"] .ft-pj{color:#fff;opacity:.9}
+.ft[data-fin="1"] .ft-w{color:rgba(255,255,255,.8)}
+/* cards off to the side aren't drawn until they come near the screen (13 gradient cards made the first paint slow) */
+.ft-track .ft{content-visibility:auto;contain-intrinsic-size:auto 640px auto 330px}
+/* only the card in front gets the moving light */
+.ft:not(.cur)::after{display:none}
+/* only the card in front plays its entrance (the others are off to the side) */
+.ft-track .ft:not(.cur){animation:none}
+.ft:not(.cur) .ft-prog .on i::before{animation:none}
+@media (max-width:560px){ .ft-in{gap:10px} .ft-prog{gap:4px} .ft-prog b{font-size:9.5px} .ft-bets{font-size:12.5px} .gs-badge{font-size:10px;padding:5px 9px 5px 7px} }
+/* pager: one dot per game in kickoff order, coloured by status, so the row reads as the week's progress */
+.ft-pager{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:2px}
+.ft-nav{flex:0 0 auto;width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);box-shadow:var(--shadow)}
+.ft-nav svg{width:16px;height:16px}
+.ft-nav:disabled{opacity:.35;box-shadow:none}
+.ft-dots{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:5px;min-width:0}
+.ft-dots button{width:8px;height:8px;padding:0;border:0;border-radius:5px;background:var(--sc,var(--line-2));transition:width .5s var(--spring),opacity .3s}
+.ft-dots button[data-st="up"]{background:transparent;box-shadow:inset 0 0 0 1.6px var(--sc)}
+.ft-dots button[data-st="live"]{animation:fpLive 1.6s ease-in-out infinite}
+.ft-dots button.on{width:22px;background:var(--sc)}
+.ft-dots button[data-st="up"].on{background:transparent}
+.ft-dots button:not(.on){opacity:.8}
+.ft-legend{display:flex;justify-content:center;flex-wrap:wrap;gap:2px 12px;margin-top:8px}
+.ft-legend button{display:inline-flex;align-items:center;gap:7px;padding:6px 4px;border:0;background:none;color:var(--muted);font-size:12.5px}
+.ft-legend i{width:8px;height:8px;border-radius:50%;background:var(--sc)}
+.ft-legend i[data-st="up"]{background:transparent;box-shadow:inset 0 0 0 1.6px var(--sc)}
+@media (hover:hover){ .ft-legend button:hover{color:var(--ink)} .ft-nav:not(:disabled):hover{color:var(--ink);border-color:var(--line-2)} }
+/* while a game is open full screen the board behind it is faded out as one layer instead of visibility:hidden, which is
+   inherited: un-hiding it restyled every element on the board (≈0.2 s on a slow phone when zooming back out) */
+html.stg-full main,html.stg-full .top{visibility:visible;opacity:0;pointer-events:none}
+/* "All games" dropdown */
+.gdd{margin:4px 0 0}
+.gdd-h{gap:12px;padding:14px 16px 14px 14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--panel-hi),var(--panel) 70%);box-shadow:inset 0 1px 0 var(--hl),var(--shadow);transition:border-color .3s,border-radius .4s var(--exp)}
+.gdd-h .dd-t{color:var(--ink);font-size:12.5px}
+.gdd-ic{flex:0 0 auto;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.gdd-ic svg{width:16px;height:16px}
+.gdd.open > .gdd-h{border-color:var(--line-2)}
+.gdd > .acc{grid-template-columns:minmax(0,1fr)}
+.gdd > .acc > .acc-in{padding:0;min-width:0}
+.gdd > .acc > .acc-in::before{content:"";display:block;height:8px}
+.gdd.settled > .acc > .acc-in{overflow:visible}
+@media (max-width:560px){ .gdd-more{display:none} }
+/* list rows: finished games say so */
+.status.done::before{background:var(--st-done)} .status.gr::before{background:var(--st-gr)} .status.live::before{background:var(--st-live);animation:fpLive 1.6s ease-in-out infinite}
+/* game page header: status line once the game has kicked off */
+/* the header card is team-coloured in both themes, so it uses the cards' bright set and white text */
+.ghero{--st-up:#cdc2ff;--st-live:#ff6b7d;--st-done:#fcd34d;--st-gr:#4ade80}
+.gres{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.8)}
+.gres-t b{color:#fff;font-weight:700}
+.gres-r{margin-left:auto;color:rgba(255,255,255,.75)} .gres-r b{font-weight:700} .gres-r b.pos{color:#4ade80} .gres-r b.neg{color:#ff8b9b}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} html.stg-on main{filter:none} }
 </style>
 
@@ -1815,7 +1912,7 @@ function sim(g){ if(!SIM[g.id]){ const qb={}; for(const t of Object.values(g.tea
 let SW=null, SW_OFF=false, SI=0; const SWQ={}, SW_DONE=[];
 const simOpts=g=>{ const qb={}; for(const t of Object.values(g.teams)) qb[t.team]=qbOf(t); return {n:g.sims||N,seed:(+g.id)%100000+7,mode:'model',wx:wxOf(g),qb}; };
 const simKey=g=>JSON.stringify([D.built||D.week,simOpts(g)]);
-function simOrder(){ const all=D.games.slice().sort((a,b)=>kick(a)-kick(b)), fs=new Set(featuredGames(all).map(g=>g.id)); return all.filter(g=>!SIM[g.id]).sort((a,b)=>(fs.has(b.id)-fs.has(a.id))||kick(a)-kick(b)); }
+function simOrder(){ const all=D.games.slice().sort((a,b)=>kick(a)-kick(b)), s=ftStart(all), at=new Map(all.map((g,i)=>[g.id,Math.abs(i-s)])); return all.filter(g=>!SIM[g.id]).sort((a,b)=>at.get(a.id)-at.get(b.id)||kick(a)-kick(b)); }
 function simCheck(){ if(D&&D.games.every(g=>SIM[g.id])) SW_DONE.splice(0).forEach(fn=>{ try{ fn(); }catch(e){} }); }
 function simIdle(){ if(SI) return; SI=1; const step=()=>{ const g=D&&simOrder()[0]; if(!g){ SI=0; simCheck(); return; } sim(g); fillGame(g); (window.requestIdleCallback||setTimeout)(step,{timeout:60}); }; step(); }
 function simWorker(){ if(SW||SW_OFF) return SW;
@@ -2123,7 +2220,7 @@ function gameView(g){ let team=g.away;
     const qbn=[g.away,g.home].map(t=>g.teams[t].qb_note?`<div><b>${t}</b> ${esc(g.teams[t].qb_note)}</div>`:'').join('');
     const qbsw=[g.away,g.home].map(t=>{ const tm=g.teams[t], opts=(tm.qb_options&&tm.qb_options.length?tm.qb_options:Object.keys(tm.scen)).filter(q=>tm.scen[q]); if(opts.length<2) return ''; const cur=qbOf(tm);
       return `<div class="qbsw"><span class="xs muted">${t} quarterback</span><div class="seg">${opts.map(q=>`<button type="button" data-qb="${esc(q)}" data-team="${t}" aria-pressed="${q===cur}">${esc(lastName(q))}${q===tm.qb_default?'':' ·alt'}</button>`).join('')}</div></div>`; }).join('');
-    return `<div class="card ghero" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}">
+    return `<div class="card ghero" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}">${heroStatus(g)}
     <div class="mh"><div class="tm">${crest(g.away)}<span class="tn">${esc(TEAMN[g.away])}</span></div>
       <div class="mid"><span>${dayShort(g)} ${fmtTime(g.time)}</span><div style="display:flex;gap:18px;align-items:center;margin:6px 0"><span class="pts num ${aw?'':'lose'}">${Math.round(s.pa)}</span><span class="pts num ${aw?'lose':''}">${Math.round(s.ph)}</span></div><b>projected</b></div>
       <div class="tm">${crest(g.home)}<span class="tn">${esc(TEAMN[g.home])}</span></div></div>
@@ -3274,7 +3371,7 @@ function initUpdate(){ if(window.claude&&window.claude.use) window.claude.use('m
   $('#updNo').addEventListener('click',close);
   $('#updGo').addEventListener('click',async()=>{ $('#updGo').disabled=true; try{ await MCP.callTool('Claude Code Remote','fire_trigger',{trigger_id:TRIGGER_ID,text:'Started from the Update button at '+new Date().toISOString()}); toast('Refresh started. New numbers load when it finishes.'); close(); }catch(e){ $('#updMsg').textContent='Could not start the refresh: '+(e&&e.message||'unknown error')+'. Try again from the Claude app.'; } $('#updGo').disabled=false; });
   document.addEventListener('click',e=>{ if(!pop.hidden&&!e.target.closest('.tools')) close(); }); }
-function reload(){ Promise.all([fetch('data/week.json',{cache:'no-store'}).then(r=>r.json()),fetch('data/picks_log.json',{cache:'no-store'}).then(r=>r.ok?r.json():{picks:[]}).catch(()=>({picks:[]}))]).then(([w,l])=>{ if(D&&w.built===D.built){ LOG=l; return; } D=w; LOG=l; CAL=w.calibration||CAL; SIM={}; boot(); toast('Loaded the latest numbers'); }).catch(()=>{}); }
+function reload(){ Promise.all([fetch('data/week.json',{cache:'no-store'}).then(r=>r.json()),fetch('data/picks_log.json',{cache:'no-store'}).then(r=>r.ok?r.json():{picks:[]}).catch(()=>({picks:[]}))]).then(([w,l])=>{ if(D&&w.built===D.built){ LOG=l; if(VIEW==='slate') ftTick(); return; } D=w; LOG=l; CAL=w.calibration||CAL; SIM={}; boot(); toast('Loaded the latest numbers'); }).catch(()=>{}); }
 
 
 /* ===== v7 (Nov 22): matchup stage. A game card zooms to full screen while the slate steps back; swipe (or ← →, or the
@@ -3323,7 +3420,7 @@ function openStage(gid,src){ if(STG||!D) return; const gs=stageOrder(), i=gs.fin
   const pg=stagePage(gs[i]); el.querySelector('.stg-track').appendChild(pg); document.body.appendChild(el);
   STG={el,i,gs,pg,src,gid0:gid,busy:anim?1:0}; drawStageBar(0); bindStage(el); stageScroll(pg); stageMini(gs[i]);
   document.body.style.overflow='hidden'; el.querySelector('.stg-x').focus({preventScroll:true});
-  const fin=()=>{ if(STG&&STG.el===el&&!STG.closing) html.classList.add('stg-full'); };
+  const fin=()=>{ if(STG&&STG.el===el&&!STG.closing){ html.classList.add('stg-full'); boardHidden(true); } };
   if(!anim){ html.classList.add('stg-on'); grow(pg); fin(); return; }
   /* first frame: the stage is only the card's rectangle, the hero sits exactly on the card, and a copy of the card covers it */
   const pgTop=el.querySelector('.stg-track').getBoundingClientRect().top, hero=pg.querySelector('.gpad > .ghero');
@@ -3338,9 +3435,16 @@ function openStage(gid,src){ if(STG||!D) return; const gs=stageOrder(), i=gs.fin
     gh.animate([{opacity:1},{opacity:0}],{duration:STG_T*(m.k<.75?.24:.34),easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).onfinish=()=>gh.parentNode&&gh.parentNode.remove();
     el.querySelector('.stg-bar').animate([{opacity:0,transform:'translateY(-100%)'},{opacity:1,transform:'none'}],{duration:480,delay:110,easing:STG_E,fill:'backwards'});
     waterfall(pg,120); grow(pg); setTimeout(fin,STG_T+40); }); }
+/* v12: the board behind a full-screen game is only faded (see head.html), so hide it from screen readers and keep Tab inside the game */
+function boardHidden(on){ document.querySelectorAll('main, .top').forEach(e=>{ if(on) e.setAttribute('aria-hidden','true'); else e.removeAttribute('aria-hidden'); }); }
+document.addEventListener('focusin',e=>{ if(!STG||STG.closing||STG.el.contains(e.target)) return; if(e.target.closest&&e.target.closest('main, .top')){ const x=STG.el.querySelector('.stg-x'); if(x) x.focus({preventScroll:true}); } });
 function closeStage(instant){ if(!STG||STG.closing) return; const {el,gs,i,pg}=STG; STG.closing=1; tip(null); closePlayer(true);
   const html=document.documentElement, g=gs[i];
-  const ft=STG.src&&STG.src.isConnected&&STG.src.classList.contains('ft')&&STG.src.dataset.fg===g.id?STG.src:null;
+  /* v12: back into the game's big card, unless it was opened from the "All games" list and its row is still showing */
+  const row=cardOf(g.id), fromRow=STG.src&&STG.src.classList&&STG.src.classList.contains('game'), rowOk=row&&row.closest('.gdd.open')&&!row.closest('[hidden]');
+  const tr=$('#ftTrack'), ft=fromRow&&rowOk?null:document.querySelector(`.ft[data-fg="${g.id}"]`);
+  if(ft&&tr&&tr._go){ const j=tr._idx(g.id); if(j!==tr._cur()) tr._go(j,true); }
+  boardHidden(false);
   const done=()=>{ el.remove(); STG=null; html.classList.remove('stg-on','stg-full','stg-snap','stg-anim'); document.body.style.overflow=''; document.querySelectorAll('.game.lifted,.ft.lifted').forEach(c=>c.classList.remove('lifted')); };
   const refocus=c=>{ if(c&&c.isConnected) c.focus({preventScroll:true}); };
   html.classList.remove('stg-full');
@@ -3450,42 +3554,107 @@ function gameCardV8(g){ const started=Date.now()>=kick(g); const st=started?'<sp
    ${row(g.away,'a')}${row(g.home,'h')}
    <div class="ev-foot"><div class="wp" aria-hidden="true"><i data-w="a" style="width:50%;--tc:${TEAMC[g.away]}"></i><i data-w="h" style="width:50%;--tc:${TEAMC[g.home]}"></i></div><span class="mkt num" data-m></span></div>
    <div class="gpick" data-tp hidden></div></button><div class="gacc"><div class="gbody"><div class="gpad"></div></div></div></div>`; }
-function fillGame(g){ fillGameV6(g); const s=gameStats(g), el=cardOf(g.id);
+function fillGame(g){ { const calm=RENDER_CALM; if(!GDD) RENDER_CALM=true; fillGameV6(g); RENDER_CALM=calm; } const s=gameStats(g), el=cardOf(g.id);
   if(el){ const aw=s.wa>=s.wh; el.querySelector('[data-pw="a"]').textContent=pct(s.wa); el.querySelector('[data-pw="h"]').textContent=pct(s.wh);
     el.querySelector('[data-ps="a"]').textContent=sg(-s.spreadHome); el.querySelector('[data-ps="h"]').textContent=sg(s.spreadHome);
     el.querySelector('[data-cw="a"]').classList.toggle('fav',aw); el.querySelector('[data-cw="h"]').classList.toggle('fav',!aw);
     el.querySelector('[data-cs="a"]').classList.toggle('fav',aw); el.querySelector('[data-cs="h"]').classList.toggle('fav',!aw); }
-  document.querySelectorAll(`.ft[data-fg="${g.id}"]`).forEach(f=>{ const a=f.querySelector('[data-fs="a"]'), h=f.querySelector('[data-fs="h"]'); tweenNum(a,Math.round(s.pa)); tweenNum(h,Math.round(s.ph));
-    a.classList.toggle('lose',s.pa<s.ph); h.classList.toggle('lose',s.ph<s.pa); f.querySelector('.ft-bar i').style.width=(s.wa*100)+'%';
-    const fav=s.wh>=.5?g.home:g.away; f.querySelector('.ft-w').textContent=`${TEAMN[fav]||fav} ${pct(Math.max(s.wa,s.wh))} to win · total ${fmt1(s.total)}`; }); }
-function featuredGames(gs){ const now=Date.now(), up=gs.filter(g=>kick(g)>now), night=up.filter(g=>+g.time.split(':')[0]>=19);
-  const pick=[...night,...up.filter(g=>!night.includes(g))].slice(0,4); const out=(pick.length?pick:gs.slice(-3)); return out.sort((a,b)=>kick(a)-kick(b)); }
-function featHTML(fs){ return `<div class="feat"><div class="ft-track" id="ftTrack">${fs.map((g,i)=>`<button type="button" class="ft" data-fg="${g.id}" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}">
-   <span class="ft-in"><span class="ft-k">${esc(slotName(g))} · ${dayShort(g)} ${fmtTime(g.time)}${g.stadium?` · ${esc(g.stadium)}`:''}</span>
+  document.querySelectorAll(`.ft[data-fg="${g.id}"]`).forEach(f=>{ const calm=RENDER_CALM; if(!f.classList.contains('cur')) RENDER_CALM=true; ftFill(f,g,s); RENDER_CALM=calm; }); }
+/* ===== v12 (Nov 23): the big game cards are the slate. Every game of the week is a card, in kickoff order, and the
+   carousel opens on the game that matters now (in progress, else the next kickoff). Each card says where its game stands
+   on a four-step track: Ungraded (not played yet) → In progress → Completed (final, bets not graded yet) → Graded, with
+   the final score and how its bets did once they're in. The game list sits in an "All games" dropdown below. Final
+   scores come from picks_log.json (`scores`, written by picks.js from nflverse games.csv); "In progress" is kickoff
+   time passed with no final yet (the page has no live feed). ===== */
+const GST_L={up:'Ungraded',live:'In progress',done:'Completed',graded:'Graded'}, GST_K=['up','live','done','graded'];
+const GST_ICON={up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  live:'<i class="gs-pulse" aria-hidden="true"></i>',
+  done:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4h10.5l-2 4 2 4H6"/></svg>',
+  graded:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.7 2.7L16.2 9.6"/></svg>'};
+const LIVE_MS=4.5*36e5;
+let FT_CUR=null, GDD=store.get('gdd',false);
+function scoreOf(g){ const s=LOG&&LOG.scores; return s&&s.week===D.week&&s.g?s.g[g.id]||null:null; }
+const GSC=new Map(); let LOGIX=null;
+function betsOf(g){ if(!LOG) return []; if(!LOGIX||LOGIX.log!==LOG||LOGIX.wk!==D.week){ const m=new Map(); for(const p of LOG.picks){ if(p.week!==D.week||p.mk==='ATD'||!live(p)) continue; let a=m.get(p.game); if(!a) m.set(p.game,a=[]); a.push(p); } LOGIX={log:LOG,wk:D.week,m}; } return LOGIX.m.get(g.id)||[]; }
+function gState(g){ const now=Date.now(), c=GSC.get(g.id); if(c&&c.log===LOG&&now-c.t<1500) return c.v; const v=gState0(g,now); GSC.set(g.id,{t:now,log:LOG,v}); return v; }
+function gState0(g,now){ const k=kick(g), sc=scoreOf(g);
+  const bets=betsOf(g), res=bets.filter(p=>p.result);
+  const st=now<k&&!sc?'up':(!sc&&!res.length&&now<k+LIVE_MS)?'live':(bets.length&&res.length===bets.length)?'graded':'done';
+  const pk=bets.filter(p=>p.type==='prop'&&(p.tier||'pick')==='pick');
+  return {st,sc,n:bets.length,nres:res.length,all:recOf(bets),pk:recOf(pk),npk:pk.length}; }
+function ftStart(gs){ if(FT_CUR){ const i=gs.findIndex(g=>g.id===FT_CUR); if(i>=0) return i; }
+  const S=gs.map(g=>gState(g).st); for(const k of ['live','up','done']){ const i=S.indexOf(k); if(i>=0) return i; } return 0; }
+function featuredGames(gs){ return gs; }
+/* the game page's header says the same: a status line above the matchup once the game has kicked off */
+function heroStatus(g){ const S=gState(g); if(S.st==='up') return ''; const r=S.pk.n?S.pk:S.all;
+  return `<div class="gres" data-st="${S.st}">${gsBadge(S.st)}<span class="gres-t">${S.sc?`Final <b class="num">${g.away} ${S.sc.a}, ${g.home} ${S.sc.h}</b>`:S.st==='live'?`Kicked off ${fmtTime(g.time)} · bets grade after the final`:'Waiting on the final score'}</span>${S.st==='graded'&&r.n?`<span class="gres-r num">${S.pk.n?'Picks':'Bets'} ${r.w}–${r.l} <b class="${r.u>=0?'pos':'neg'}">${sgnU(r.u)}</b></span>`:''}</div>`; }
+const gsBadge=st=>`<span class="gs-badge" data-st="${st}">${GST_ICON[st]}${GST_L[st]}</span>`;
+const gsTrack=st=>{ const c=GST_K.indexOf(st); return `<span class="ft-prog" aria-hidden="true">${GST_K.map((k,j)=>`<span class="${j<c?'on':j===c?'on cur':''}" style="--k:${j}"><i></i><b>${GST_L[k]}</b></span>`).join('')}</span>`; };
+const wlBar=r=>r.n?`<span class="ft-wl" aria-hidden="true"><i style="width:${(100*r.w/r.n).toFixed(1)}%"></i></span>`:'';
+function ftBets(S){ const pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+  if(S.st==='graded'){ const r=S.pk.n?S.pk:S.all; return `<span class="ft-bets">${wlBar(r)}<span>${S.pk.n?'Picks':'Bets'} <b class="num">${r.w}–${r.l}</b> <b class="num ${r.u>=0?'pos':'neg'}">${sgnU(r.u)}</b>${S.pk.n&&S.all.n>S.pk.n?`<span class="ft-sub num"> · all bets ${S.all.w}–${S.all.l}</span>`:''}</span></span>`; }
+  if(S.st==='done') return `<span class="ft-bets"><span>${S.n?(S.nres?`${S.nres} of ${pl(S.n,'bet')} graded`:`${pl(S.n,'bet')} waiting on the box score`):'No bets logged'}</span></span>`;
+  const what=S.npk?`${pl(S.npk,'pick')} · ${pl(S.n,'bet')}`:S.n?pl(S.n,'bet'):'';
+  return `<span class="ft-bets"><span>${what?`${what} ${S.st==='live'?'grade after the final':'to grade'}`:'No lines posted yet'}</span></span>`; }
+function ftInner(g,S){ const fin=!!S.sc, a=fin?S.sc.a:null, h=fin?S.sc.h:null;
+  return `<span class="ft-in"><span class="ft-top">${gsBadge(S.st)}<span class="ft-k">${dayShort(g)} ${fmtTime(g.time)}${g.stadium?` · ${esc(g.stadium)}`:''}</span></span>
    <span class="ft-t"><span class="ft-team">${chip(g.away)}<b>${esc(TEAMN[g.away]||g.away)}</b></span><span class="ft-at">at</span><span class="ft-team">${chip(g.home)}<b>${esc(TEAMN[g.home]||g.home)}</b></span></span>
-   <span class="ft-s num"><b data-fs="a">–</b><i>–</i><b data-fs="h">–</b><span class="ft-pj">projected</span></span>
-   <span class="ft-bar"><i style="width:50%"></i></span><span class="ft-w xs"></span><span class="ft-go">Open game <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></button>`).join('')}</div>
-   ${fs.length>1?`<div class="ft-dots">${fs.map((g,i)=>`<button type="button" data-fd="${i}" aria-label="Featured game ${i+1}"${i?'':' class="on"'}></button>`).join('')}</div>`:''}</div>`; }
-function bindFeat(){ const tr=$('#ftTrack'); if(!tr) return; const slides=[...tr.children], dots=[...document.querySelectorAll('[data-fd]')]; let hold=0, timer=null, cur=0;
-  const idx=()=>Math.round(tr.scrollLeft/Math.max(1,slides[0].offsetWidth+parseFloat(getComputedStyle(tr).columnGap||0)));
-  const onScroll=()=>{ const w=slides[0].offsetWidth; slides.forEach((s,i)=>{ const p=(s.offsetLeft-tr.scrollLeft-tr.offsetLeft*0)/Math.max(1,w); s.style.setProperty('--p',Math.max(-1,Math.min(1,(s.offsetLeft-tr.scrollLeft)/w-0)).toFixed(3)); });
-    const i=idx(); if(i!==cur){ cur=i; dots.forEach((d,j)=>d.classList.toggle('on',j===i)); } };
-  tr.addEventListener('scroll',()=>requestAnimationFrame(onScroll),{passive:true}); onScroll();
-  const go=i=>{ const s=slides[(i+slides.length)%slides.length]; tr.scrollTo({left:s.offsetLeft-slides[0].offsetLeft,behavior:RM()?'auto':'smooth'}); };
-  dots.forEach((d,i)=>d.addEventListener('click',()=>{ hold=Date.now(); go(i); }));
-  ['pointerdown','wheel','touchstart'].forEach(ev=>tr.addEventListener(ev,()=>{ hold=Date.now(); },{passive:true}));
-  slides.forEach(s=>s.addEventListener('click',()=>openStage(s.dataset.fg,s)));
-  if(slides.length>1&&!RM()) timer=setInterval(()=>{ if(!tr.isConnected){ clearInterval(timer); return; } if(STG||document.hidden||Date.now()-hold<9000) return; go(cur+1); },5200); }
+   <span class="ft-s num">${fin?`<b class="${a<h?'lose':''}">${a}</b><i>–</i><b class="${h<a?'lose':''}">${h}</b><span class="ft-pj">Final</span>`:`<b data-fs="a">–</b><i>–</i><b data-fs="h">–</b><span class="ft-pj">projected</span>`}</span>
+   ${fin?'':'<span class="ft-bar"><i style="width:50%"></i></span>'}<span class="ft-w xs"></span>
+   ${gsTrack(S.st)}
+   <span class="ft-foot">${ftBets(S)}<span class="ft-go">Open game <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></span>`; }
+const ftSig=S=>[S.st,S.sc?S.sc.a+'-'+S.sc.h:'',S.nres,S.n,S.all.u.toFixed(2)].join('|');
+const ftLabel=(g,S)=>`${TEAMN[g.away]||g.away} at ${TEAMN[g.home]||g.home}, ${GST_L[S.st]}${S.sc?`, final ${S.sc.a} to ${S.sc.h}`:''}: open game`;
+function ftFill(f,g,s){ const w=f.querySelector('.ft-w'); if(!w) return;
+  if(f.dataset.fin!=='1'){ const a=f.querySelector('[data-fs="a"]'), h=f.querySelector('[data-fs="h"]'); tweenNum(a,Math.round(s.pa)); tweenNum(h,Math.round(s.ph));
+    a.classList.toggle('lose',s.pa<s.ph); h.classList.toggle('lose',s.ph<s.pa); const b=f.querySelector('.ft-bar i'); if(b) b.style.width=(s.wa*100)+'%';
+    const fav=s.wh>=.5?g.home:g.away; w.textContent=`${TEAMN[fav]||fav} ${pct(Math.max(s.wa,s.wh))} to win · total ${fmt1(s.total)}`; return; }
+  const sc=scoreOf(g), pw=s.wh>=.5?g.home:g.away, aw=sc?(sc.a>sc.h?g.away:sc.h>sc.a?g.home:null):null;
+  w.innerHTML=`Projected ${Math.round(s.pa)}–${Math.round(s.ph)} · model had ${esc(TEAMN[pw]||pw)} ${pct(Math.max(s.wa,s.wh))}${aw?(aw===pw?' <span class="ft-ok">✓ called it</span>':' <span class="ft-no">✗ missed</span>'):''}`; }
+function featHTML(gs){ const SS=gs.map(g=>gState(g)), cnt={}; SS.forEach(S=>cnt[S.st]=(cnt[S.st]||0)+1);
+  return `<div class="feat"><div class="ft-track" id="ftTrack" tabindex="-1">${gs.map((g,i)=>{ const S=SS[i]; return `<button type="button" class="ft" data-fg="${g.id}" data-st="${S.st}" data-fin="${S.sc?1:0}" data-sig="${ftSig(S)}" aria-label="${esc(ftLabel(g,S))}" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}">${ftInner(g,S)}</button>`; }).join('')}</div>
+   ${gs.length>1?`<div class="ft-pager"><button type="button" class="ft-nav press" data-fgo="-1" aria-label="Previous game">${SVG_L}</button><div class="ft-dots" id="ftDots">${gs.map((g,i)=>`<button type="button" data-fd="${i}" data-st="${SS[i].st}" aria-label="${esc(g.away)} at ${esc(g.home)}, ${GST_L[SS[i].st]}"></button>`).join('')}</div><button type="button" class="ft-nav press" data-fgo="1" aria-label="Next game">${SVG_R}</button></div>`:''}
+   <div class="ft-legend" id="ftLegend">${ftLegend(cnt)}</div></div>`; }
+function ftLegend(cnt){ return GST_K.filter(k=>cnt[k]).map(k=>`<button type="button" class="press" data-fj="${k}"><i data-st="${k}"></i>${cnt[k]} ${GST_L[k].toLowerCase()}</button>`).join(''); }
+function bindFeat(){ const tr=$('#ftTrack'); if(!tr) return; const slides=[...tr.children], dots=[...document.querySelectorAll('#ftDots [data-fd]')]; let cur=-1;
+  const step=()=>slides.length>1?slides[1].offsetLeft-slides[0].offsetLeft:Math.max(1,slides[0].offsetWidth);
+  const clampI=i=>Math.max(0,Math.min(slides.length-1,i));
+  const mark=i=>{ if(i===cur) return; cur=i; FT_CUR=slides[i].dataset.fg; slides.forEach((s,j)=>s.classList.toggle('cur',j===i)); dots.forEach((d,j)=>{ d.classList.toggle('on',j===i); if(j===i) d.setAttribute('aria-current','true'); else d.removeAttribute('aria-current'); });
+    document.querySelectorAll('[data-fgo]').forEach(b=>b.disabled=b.dataset.fgo==='-1'?i===0:i===slides.length-1); };
+  const offs=slides.map(s=>s.offsetLeft-slides[0].offsetLeft), w0=step();
+  const onScroll=()=>{ const sl=tr.scrollLeft; slides.forEach((s,i)=>{ const v=Math.max(-1,Math.min(1,(offs[i]-sl)/w0)).toFixed(3); if(s._p!==v){ s._p=v; s.style.setProperty('--p',v); } }); mark(clampI(Math.round(sl/w0))); };
+  let q=0; tr.addEventListener('scroll',()=>{ if(q) return; q=1; requestAnimationFrame(()=>{ q=0; onScroll(); }); },{passive:true});
+  const go=(i,inst)=>{ tr.scrollTo({left:offs[clampI(i)],behavior:inst||RM()?'auto':'smooth'}); if(inst) onScroll(); };
+  tr._go=go; tr._idx=gid=>slides.findIndex(s=>s.dataset.fg===gid); tr._cur=()=>cur;
+  const pager=tr.parentElement; pager.addEventListener('click',e=>{ const d=e.target.closest('[data-fd]'); if(d){ go(+d.dataset.fd); return; } const n=e.target.closest('[data-fgo]'); if(n){ go(cur+ +n.dataset.fgo); return; }
+    const j=e.target.closest('[data-fj]'); if(j){ const i=slides.findIndex(s=>s.dataset.st===j.dataset.fj); if(i>=0) go(i); } });
+  slides.forEach((s,i)=>s.addEventListener('click',()=>{ if(i!==cur){ go(i); return; } openStage(s.dataset.fg,s); }));
+  slides.forEach(s=>s.addEventListener('keydown',e=>{ if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft') return; e.preventDefault(); const i=clampI(cur+(e.key==='ArrowRight'?1:-1)); go(i); slides[i].focus({preventScroll:true}); }));
+  go(ftStart(D.games.slice().sort((a,b)=>kick(a)-kick(b))),true); }
+/* a card's status moves on its own (kickoff, the final, a refresh that grades it): update only the cards that changed */
+function ftTick(){ const tr=$('#ftTrack'); if(!tr||!D) return; const cnt={}; let ch=0;
+  tr.querySelectorAll('.ft').forEach(f=>{ const g=D.games.find(x=>x.id===f.dataset.fg); if(!g) return; const S=gState(g); cnt[S.st]=(cnt[S.st]||0)+1; const sig=ftSig(S); if(sig===f.dataset.sig) return; ch++;
+    f.dataset.sig=sig; f.dataset.st=S.st; f.dataset.fin=S.sc?1:0; f.setAttribute('aria-label',ftLabel(g,S)); f.innerHTML=ftInner(g,S); if(SIM[g.id]){ RENDER_CALM=true; ftFill(f,g,gameStats(g)); RENDER_CALM=false; }
+    const d=document.querySelector(`#ftDots [data-fd="${[...tr.children].indexOf(f)}"]`); if(d){ d.dataset.st=S.st; d.setAttribute('aria-label',`${g.away} at ${g.home}, ${GST_L[S.st]}`); }
+    const row=cardOf(g.id), hs=row&&row.querySelector('.ev-head .status'), hw=row&&row.querySelector('.ev-head .ev-when'); if(hs) hs.outerHTML=rowStatus(g,S); if(hw) hw.textContent=rowWhen(g,S); });
+  if(ch){ const lg=$('#ftLegend'); if(lg) lg.innerHTML=ftLegend(cnt); } }
+setInterval(()=>{ if(VIEW==='slate'&&!document.hidden) ftTick(); },30000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&VIEW==='slate') ftTick(); });
+function rowStatus(g,S){ S=S||gState(g); if(S.st==='up') return g.props_live?'<span class="status on">Lines up</span>':'<span class="status">Lines soon</span>';
+  if(S.st==='live') return '<span class="status live">In progress</span>';
+  return `<span class="status ${S.st==='graded'?'gr':'done'}">${GST_L[S.st]}</span>`; }
+const rowWhen=(g,S)=>{ S=S||gState(g); return S.sc?`Final ${S.sc.a}–${S.sc.h}`:`${dayShort(g)} ${fmtTime(g.time)}`; };
 function renderSlate(){ const gs=D.games.slice().sort((a,b)=>kick(a)-kick(b)); const slots=[]; for(const g of gs){ const k=slotName(g)+'|'+g.date; let s=slots.find(x=>x.k===k); if(!s) slots.push(s={k,key:'s'+slots.length,name:slotName(g),games:[]}); s.games.push(g); }
   if(SLF!=='all'&&!slots.some(s=>s.key===SLF)) SLF='all';
   const nLines=D.games.filter(g=>g.props_live).length; GI=0; const fs=featuredGames(gs);
   $('#main').innerHTML=`<section class="view sl8${OV?' ov':''}">
     <div class="sl-top"><div class="sl-title"><span class="eyebrow num">NFL ${esc(D.season)} · Week ${esc(D.week)} · ${N.toLocaleString()} sims a game</span><h1>This week's <em>board</em></h1></div>${seasonDD()}</div>
     ${featHTML(fs)}
+    <div class="dd gdd${GDD?' open settled':''}" id="gdd"><button type="button" class="dd-h gdd-h" aria-expanded="${GDD}"><span class="gdd-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span class="dd-t">All games</span><span class="dd-hint"><span class="num">${gs.length} games</span><span class="gdd-more"> · kickoffs, lines and win odds</span></span>${CHEV}</button><div class="acc"><div class="acc-in">
     <div class="sl-bar"><div class="sl-pills" id="slPills" role="tablist" aria-label="Kickoff windows"><i class="sl-ind" aria-hidden="true"></i><button type="button" role="tab" data-sf="all" aria-selected="${SLF==='all'}">All games</button>${slots.map(s=>`<button type="button" role="tab" data-sf="${s.key}" aria-selected="${SLF===s.key}">${esc(slotLbl(s.name))}<span class="num">${s.games.length}</span></button>`).join('')}</div>
       <button type="button" class="iconbtn press" id="ovBtn" aria-pressed="${!!OV}" aria-label="${OV?'Zoom in to full game rows':'Zoom out to all games'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg></button></div>
     <div class="sl-list">${slots.map(s=>`<div class="slot" data-slot="${s.key}"${SLF!=='all'&&SLF!==s.key?' hidden':''}><h2><span>${esc(s.name)}</span><span class="num">${esc(s.games[0].day.slice(0,3))} ${esc(s.games[0].date.slice(5).replace('-','/'))}</span></h2><div class="games">${s.games.map(gameCard).join('')}</div></div>`).join('')}</div>
-    <p class="xs muted sl-meta num">${D.games.length} games · ${nLines} with player lines${D.byes&&D.byes.length?` · bye: ${D.byes.join(', ')}`:''} · tap a game to zoom in, swipe between games, pinch the board to see every game at once</p></section>`;
+    <p class="xs muted sl-meta num">${D.games.length} games · ${nLines} with player lines${D.byes&&D.byes.length?` · bye: ${D.byes.join(', ')}`:''} · tap a game to zoom in, swipe between games, pinch the board to see every game at once</p></div></div></div></section>`;
   D.games.forEach(g=>{ if(SIM[g.id]) fillGame(g); });
   bindRows();
   const ob=$('#ovBtn'); if(ob) ob.addEventListener('click',()=>setOverview(!OV)); bindSlateZoom(); bindFeat();
@@ -3563,8 +3732,15 @@ function replayInner(d){ if(RM()) return; const E='cubic-bezier(.22,1,.36,1)';
   d.querySelectorAll('svg.curve').forEach(s=>{ s.classList.remove('anim'); void s.getBoundingClientRect(); s.classList.add('anim'); });
   d.querySelectorAll('.chart .draw').forEach(s=>{ s.style.animation='none'; void s.getBoundingClientRect(); s.style.animation=''; }); }
 function ddToggle(d,open){ const h=d.querySelector(':scope > .dd-h'); if(h) h.setAttribute('aria-expanded',open);
+  if(d.id==='gdd'){ gddToggle(d,open); return; }
   if(open){ raf2(()=>{ d.classList.add('open'); grow(d); replayInner(d); }); } else d.classList.remove('open');
   if(d.closest('.pc2')&&d.dataset.k){ if(open) PC_OPEN.add(d.dataset.k); else PC_OPEN.delete(d.dataset.k); } }
+/* v12: the "All games" dropdown remembers its state; once open it lets the kickoff bar stick, and its rows drop in */
+function gddToggle(d,open){ GDD=open; store.set('gdd',open); clearTimeout(d._st);
+  if(!open){ d.classList.remove('settled','open'); return; }
+  raf2(()=>{ d.classList.add('open'); if(RM()){ d.classList.add('settled'); return; } d._st=setTimeout(()=>d.classList.add('settled'),560);
+    const H=innerHeight; let j=0; d.querySelectorAll('.sl-bar, .slot:not([hidden]) > h2, .slot:not([hidden]) .game').forEach(c=>{ if(j>10) return; const r=c.getBoundingClientRect(); if(r.top>H) return;
+      c.animate([{opacity:0,transform:'translateY(-12px)'},{opacity:1,transform:'none'}],{duration:460,delay:50+j++*40,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}); }); }); }
 document.addEventListener('click',e=>{ const h=e.target.closest('.dd-h'); if(!h) return; const d=h.parentElement; if(!d||!d.classList.contains('dd')) return; e.stopPropagation(); ddToggle(d,!d.classList.contains('open')); },true);
 /* page intros sit behind a small "i" next to the title */
 function infoize(root){ (root||document).querySelectorAll('.vhead').forEach(vh=>{ const box=vh.firstElementChild, h=box&&box.querySelector(':scope > h1'), p=box&&box.querySelector(':scope > p'); if(!h||!p||box.querySelector('.ib')) return;
@@ -3587,11 +3763,11 @@ const AFTER={ picks:()=>infoize($('#main')), record:()=>{ infoize($('#main')); t
 function seasonDD(){ const s=seasonStats(); if(!s||!LOG) return '';
   const P=LOG.picks.filter(p=>p.type==='prop'&&(p.tier||'pick')==='pick'&&p.mk!=='ATD'&&!p.price_est&&(p.result==='win'||p.result==='loss')), w=P.filter(p=>p.result==='win').length, u=P.reduce((a,p)=>a+(p.units||0),0);
   return `<div class="dd sdd"><button type="button" class="dd-h sdd-h" aria-expanded="false"><span class="dd-t">Season</span><b class="num">${w}–${P.length-w}</b><b class="num ${u>=0?'pos':'neg'}">${sgnU(u)}</b>${CHEV}</button><div class="acc"><div class="acc-in">${s}</div></div></div>`; }
-function gameCard(g){ const started=Date.now()>=kick(g); const st=started?'<span class="status live">Started</span>':g.props_live?'<span class="status on">Lines up</span>':'<span class="status">Lines soon</span>';
+function gameCard(g){ const started=Date.now()>=kick(g); const st=rowStatus(g);
   const hasPick=!started&&gamePicks(g).length>0;
   const row=(t,k)=>`<div class="ev-row" data-t="${k}">${chip(t)}<span class="tname">${esc(TEAMN[t]||t)}</span><span class="ev-c"><b class="num skel" data-s="${k}">00</b></span><span class="ev-c" data-cw="${k}"><b class="num" data-pw="${k}">–</b></span><span class="ev-c" data-cs="${k}"><b class="num" data-ps="${k}">–</b></span></div>`;
   return `<div class="gwrap" data-gw="${g.id}" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}"><div class="game ev" role="button" tabindex="0" data-g="${g.id}" style="--i:${GI++}" aria-label="${esc(TEAMN[g.away]||g.away)} at ${esc(TEAMN[g.home]||g.home)}: open game">
-   <div class="ev-head"><span class="ev-when num">${dayShort(g)} ${fmtTime(g.time)}</span>${st}<span class="ev-lbl">Proj</span><span class="ev-lbl">Win</span><span class="ev-lbl">Spread</span></div>
+   <div class="ev-head"><span class="ev-when num">${rowWhen(g)}</span>${st}<span class="ev-lbl">Proj</span><span class="ev-lbl">Win</span><span class="ev-lbl">Spread</span></div>
    ${row(g.away,'a')}${row(g.home,'h')}
    <button type="button" class="ev-more" aria-expanded="false"><span>${hasPick?'Lines and top pick':'DraftKings lines'}</span>${CHEV}</button>
    <div class="ev-det"><div class="ev-detin"><div class="ev-foot"><div class="wp" aria-hidden="true"><i data-w="a" style="width:50%;--tc:${TEAMC[g.away]}"></i><i data-w="h" style="width:50%;--tc:${TEAMC[g.home]}"></i></div><span class="mkt num" data-m></span></div>
