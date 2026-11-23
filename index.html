@@ -1624,7 +1624,14 @@ html:not(.kbd) .ft:focus-visible{outline:none}
 /* room after the last card so it can line up with the others instead of sitting against the right edge */
 /* the track runs to the screen edges (gutter kept as padding) and leaves room below, so card shadows aren't cut off */
 .ft-track{padding-bottom:44px;margin-bottom:-28px}
-@media (max-width:560px){ .ft-track{margin-inline:calc(-1 * var(--gut-l)) calc(-1 * var(--gut-r));padding-inline:var(--gut-l) var(--gut-r);scroll-padding-inline:var(--gut-l) var(--gut-r)} .ft-track::after{content:"";flex:0 0 calc(12% - 14px)} }
+/* phones (Nov 23, Tristen): the card is centred and fills the page's width between the margins; a sliver of each
+   neighbouring game shows at the screen edges */
+@media (max-width:560px){
+  .ft-track{margin-inline:calc(-1 * var(--gut-l)) calc(-1 * var(--gut-r));padding-inline:0;scroll-padding-inline:0;gap:10px}
+  .ft{flex-basis:calc(100% - var(--gut-l) - var(--gut-r));scroll-snap-align:center}
+  .ft-track::before{content:"";flex:0 0 calc(var(--gut-l) - 10px)}
+  .ft-track::after{content:"";flex:0 0 calc(var(--gut-r) - 10px)}
+}
 /* wider screens: the card in front sits in the middle, its neighbours peek on both sides, dimmed */
 @media (min-width:561px){
   .ft{flex-basis:min(calc(100% - 120px),680px);scroll-snap-align:center;transition:transform .4s var(--exp),box-shadow .4s,scale .55s var(--exp),opacity .55s var(--exp)}
@@ -1667,8 +1674,8 @@ html:not(.kbd) .ft:focus-visible{outline:none}
 /* only the card in front gets the moving light */
 .ft:not(.cur)::after{display:none}
 /* only the card in front plays its entrance (the others are off to the side) */
-.ft-track .ft:not(.cur){animation:none}
-.ft:not(.cur) .ft-prog .on i::before{animation:none}
+.ft-track .ft.nofx{animation:none}
+.ft.nofx .ft-prog .on i::before{animation:none}
 @media (max-width:560px){ .ft-in{gap:10px} .ft-prog{gap:4px} .ft-prog b{font-size:9.5px} .ft-bets{font-size:12.5px} .gs-badge{font-size:10px;padding:5px 9px 5px 7px} }
 /* pager: one dot per game in kickoff order, coloured by status, so the row reads as the week's progress */
 .ft-pager{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:2px}
@@ -1690,6 +1697,39 @@ html:not(.kbd) .ft:focus-visible{outline:none}
 /* while a game is open full screen the board behind it is faded out as one layer instead of visibility:hidden, which is
    inherited: un-hiding it restyled every element on the board (≈0.2 s on a slow phone when zooming back out) */
 html.stg-full main,html.stg-full .top{visibility:visible;opacity:0;pointer-events:none}
+/* ===== v12.3 (Nov 23): each team's share of a card's colour = its win chance (model). The cards and the game header split
+   corner to corner; --wp is the gradient stop that makes the away side's area equal --wa (set by script); rows' edge
+   bar splits at --wa. Registered so the split eases into place when the numbers arrive. ===== */
+@property --wp{syntax:"<number>";inherits:false;initial-value:.5}
+@property --wa{syntax:"<number>";inherits:false;initial-value:.5}
+.ft,.card.ghero{background:linear-gradient(to bottom right,color-mix(in oklab,var(--ta) 86%,#050914) 0%,color-mix(in oklab,var(--ta) 62%,#050914) calc(var(--wp) * 100% - 4%),color-mix(in oklab,var(--th) 62%,#050914) calc(var(--wp) * 100% + 4%),color-mix(in oklab,var(--th) 86%,#050914) 100%)}
+.ft{transition:transform .4s var(--exp),box-shadow .4s,scale .55s var(--exp),opacity .55s var(--exp)}
+.ft.cur{transition:transform .4s var(--exp),box-shadow .4s,scale .55s var(--exp),opacity .55s var(--exp),--wp .9s var(--exp)}
+.game::before{--wa:inherit;background:linear-gradient(180deg,color-mix(in oklab,var(--ta),var(--lift-c) var(--lift)) 0 calc(var(--wa) * 100%),color-mix(in oklab,var(--th),var(--lift-c) var(--lift)) calc(var(--wa) * 100%) 100%)}
+/* v12.3: travelling copies of the shared parts (card ↔ game header). Their ancestors are bare copies that only carry
+   classes and colours; the part itself is placed by script. */
+.stg-flybox{z-index:7}
+.fly-anc{position:static!important;display:block!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;min-height:0!important;min-width:0!important;max-width:none!important;width:auto!important;height:auto!important;transform:none!important;scale:none!important;translate:none!important;opacity:1!important;visibility:visible!important;overflow:visible!important;clip-path:none!important;-webkit-mask-image:none!important;mask-image:none!important;filter:none!important;content-visibility:visible!important}
+.stg-flybox > .fly-anc{position:absolute!important;inset:0!important}
+.fly-anc::before,.fly-anc::after{display:none!important}
+.fly-part svg,.fly-part > *{flex-shrink:0}
+.fly-part{position:absolute!important;margin:0!important;box-sizing:border-box;transform-origin:50% 50%;will-change:transform,opacity;white-space:nowrap}
+/* v12.2: the header's soft light is simply there (it faded in on every game you swiped to) */
+.stg-page .ghero::after{animation:none}
+/* v12.2: game pages: rows drop in from script only (stageTab / waterfall / team switch), never also from CSS */
+.stg-page .plc{animation:none}
+/* v12.2: the player's initials box looks the same on the tile, while it travels and in the card: solid team colour */
+.pz-h .av,.pz-gh .av{background:var(--tc);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22)}
+.stg-panel .plc-h .av{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+@media (max-width:560px){ .stg-panel .plc-h .av{font-size:13px} .pz-h .av{font-size:17px} }
+/* v12.2: while the card grows or shrinks, its background paints the header band (same gradient and stripes, same place) */
+.pz-card.morph .pz-bg{background:repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 2px,transparent 2px 12%) 0 var(--hy,0px) / 100% var(--hb,0px) no-repeat,
+  linear-gradient(125deg,color-mix(in oklab,var(--tc) 90%,#000),color-mix(in oklab,var(--tc) 50%,#0d0a1d)) 0 var(--hy,0px) / 100% var(--hb,0px) no-repeat,var(--panel)}
+/* the travelling copies of the name and initials use the header's white text from the first frame */
+.pz-gh{color:#fff}
+html:not(.kbd) .plc:focus-visible{outline:none}
+.pz-card.morph .pz-h:not(.pz-gh){background:none}
+.pz-card.morph .pz-h:not(.pz-gh)::after{display:none}
 /* "All games" dropdown */
 .gdd{margin:4px 0 0}
 .gdd-h{gap:12px;padding:14px 16px 14px 14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--panel-hi),var(--panel) 70%);box-shadow:inset 0 1px 0 var(--hl),var(--shadow);transition:border-color .3s,border-radius .4s var(--exp)}
@@ -1710,6 +1750,22 @@ html.stg-full main,html.stg-full .top{visibility:visible;opacity:0;pointer-event
 .gres{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0 0 14px;font-size:13px;color:rgba(255,255,255,.8)}
 .gres-t b{color:#fff;font-weight:700}
 .gres-r{margin-left:auto;color:rgba(255,255,255,.75)} .gres-r b{font-weight:700} .gres-r b.pos{color:#4ade80} .gres-r b.neg{color:#ff8b9b}
+/* ===== v12.4 (Nov 23): phones: the tab bar is part of the screen's bottom edge, not a floating pill. Full width, runs
+   down behind the home indicator (safe area), hairline on top, the page scrolls under it blurred. The active tab gets a
+   capsule behind its icon that slides between tabs. ===== */
+@media (max-width:760px){
+  .tabbar{left:0;right:0;bottom:0;border:0;border-top:1px solid var(--cline);border-radius:0;
+    padding:5px max(6px,env(safe-area-inset-right,0px)) max(4px,env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));
+    background:color-mix(in srgb,var(--cbg) 94%,transparent);-webkit-backdrop-filter:saturate(1.6) blur(22px);backdrop-filter:saturate(1.6) blur(22px);
+    box-shadow:none}
+  .tabbar button{gap:3px;padding:4px 0 3px;border-radius:0;font-size:10.5px;font-weight:650}
+  .tabbar button svg{width:22px;height:22px}
+  .tabbar button[aria-current="page"] svg{transform:none;color:#fff}
+  .tabbar button[aria-current="page"]{color:#fff;font-weight:750}
+  .tabbar .blob{top:6px;bottom:auto;height:28px;border-radius:14px}
+  main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+  #toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} html.stg-on main{filter:none} }
 </style>
 
@@ -2159,7 +2215,7 @@ function setView(v, push){ closeStage(true); document.documentElement.style.setP
   if(document.startViewTransition&&!RM()&&push) document.startViewTransition(run); else run(); }
 const snapOnce=(el,fn)=>{ if(el.dataset.ready){ fn(); return; } el.dataset.ready='1'; el.style.transition='none'; fn(); void el.offsetWidth; el.style.transition=''; };   // v11: the highlight starts in place on first load
 function movePill(){ const nav=$('#nav'), b=nav.querySelector('[aria-current="page"]'), pill=nav.querySelector('.pill'); if(b&&pill&&b.offsetWidth){ const col=getComputedStyle(nav).flexDirection==='column'; snapOnce(pill,()=>{ pill.style.width=b.offsetWidth+'px'; pill.style.height=col?b.offsetHeight+'px':''; pill.style.transform=col?`translateY(${b.offsetTop}px)`:`translateX(${b.offsetLeft-4}px)`; }); }
-  const tb=$('#tabbar'), bb=tb&&tb.querySelector('.blob'), cb=tb&&tb.querySelector('[aria-current="page"]'); if(bb&&cb&&cb.offsetWidth){ const x=cb.offsetLeft, px=bb.dataset.x; snapOnce(bb,()=>{ bb.style.width=cb.offsetWidth+'px'; bb.style.transform=`translateX(${x}px)`; });
+  const tb=$('#tabbar'), bb=tb&&tb.querySelector('.blob'), cb=tb&&tb.querySelector('[aria-current="page"]'); if(bb&&cb&&cb.offsetWidth){ /* v12.4: the highlight is a capsule behind the icon, centred on the tab */ const w=Math.min(60,cb.offsetWidth-12), x=Math.round(cb.offsetLeft+(cb.offsetWidth-w)/2), px=bb.dataset.x; snapOnce(bb,()=>{ bb.style.width=w+'px'; bb.style.transform=`translateX(${x}px)`; });
     if(px!=null&&+px!==x&&!RM()&&bb.animate) bb.animate([{scale:'1 1'},{scale:'1.22 .84',offset:.35},{scale:'1 1'}],{duration:520,easing:'ease-out'}); bb.dataset.x=x; } }
 
 /* slate */
@@ -2220,9 +2276,9 @@ function gameView(g){ let team=g.away;
     const qbn=[g.away,g.home].map(t=>g.teams[t].qb_note?`<div><b>${t}</b> ${esc(g.teams[t].qb_note)}</div>`:'').join('');
     const qbsw=[g.away,g.home].map(t=>{ const tm=g.teams[t], opts=(tm.qb_options&&tm.qb_options.length?tm.qb_options:Object.keys(tm.scen)).filter(q=>tm.scen[q]); if(opts.length<2) return ''; const cur=qbOf(tm);
       return `<div class="qbsw"><span class="xs muted">${t} quarterback</span><div class="seg">${opts.map(q=>`<button type="button" data-qb="${esc(q)}" data-team="${t}" aria-pressed="${q===cur}">${esc(lastName(q))}${q===tm.qb_default?'':' ·alt'}</button>`).join('')}</div></div>`; }).join('');
-    return `<div class="card ghero" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}">${heroStatus(g)}
+    return `<div class="card ghero" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]};${shareVars(s.wa)}">${heroStatus(g,s)}
     <div class="mh"><div class="tm">${crest(g.away)}<span class="tn">${esc(TEAMN[g.away])}</span></div>
-      <div class="mid"><span>${dayShort(g)} ${fmtTime(g.time)}</span><div style="display:flex;gap:18px;align-items:center;margin:6px 0"><span class="pts num ${aw?'':'lose'}">${Math.round(s.pa)}</span><span class="pts num ${aw?'lose':''}">${Math.round(s.ph)}</span></div><b>projected</b></div>
+      <div class="mid"><span>${dayShort(g)} ${fmtTime(g.time)}</span><div style="display:flex;gap:18px;align-items:center;margin:6px 0">${(()=>{ const f=scoreOf(g); return f?`<span class="pts num ${f.a<f.h?'lose':''}">${f.a}</span><span class="pts num ${f.h<f.a?'lose':''}">${f.h}</span>`:`<span class="pts num ${aw?'':'lose'}">${Math.round(s.pa)}</span><span class="pts num ${aw?'lose':''}">${Math.round(s.ph)}</span>`; })()}</div><b>${scoreOf(g)?'final':'projected'}</b></div>
       <div class="tm">${crest(g.home)}<span class="tn">${esc(TEAMN[g.home])}</span></div></div>
     <div class="wpbig"><div class="wp"><i style="width:${s.wa*100}%;--tc:${TEAMC[g.away]}"></i><i style="width:${s.wh*100}%;--tc:${TEAMC[g.home]}"></i></div><div class="lg num"><span>${g.away} ${pct(s.wa)}</span><span>${g.home} ${pct(s.wh)}</span></div></div>
     <div class="mrow"><div><span class="k">Winner</span><span class="v">${fav}</span><span class="s num">${pct(Math.max(s.wh,s.wa))} to win</span></div>
@@ -2239,7 +2295,7 @@ function gameView(g){ let team=g.away;
    <div class="sec"><h3>More on this game</h3><div class="folds">${fold('Game lines','model vs DraftKings',gameLinesHTML(g))}${fold('Touchdown chances','anytime TD',tdHTML(g))}</div>
      <div class="morerow">${[['sgp','Parlays'],['watch','Watch the sim'],['best','Best bets'],['whatif','QB and weather what-ifs']].map(([t,l])=>`<button type="button" class="chip press" data-gtool="${t}" data-gid="${g.id}">${l}</button>`).join('')}</div>
      <p class="xs muted" style="margin:8px 2px 0">These open with this game picked.</p></div>`; };
-  const mount=el=>{ const draw=t=>{ team=t; el.querySelector('#plist').innerHTML=teamPlayers(g,t); el.querySelectorAll('#tmSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t?'true':'false')); grow(el);
+  const mount=el=>{ const draw=t=>{ team=t; const pl=el.querySelector('#plist'); pl.innerHTML=teamPlayers(g,t); if(pl.offsetParent) cascadeIn([...pl.children],20); el.querySelectorAll('#tmSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t?'true':'false')); grow(el);
       el.querySelectorAll('.pl-h').forEach(b=>b.addEventListener('click',()=>togglePlayer(b.closest('.pl')))); };
     /* v8.4: inside the stage the player list waits until the zoom has landed (or the Players tab is opened), so opening a game stays smooth */
     el._pDone=0; el._drawPlayers=()=>{ if(el._pDone) return; el._pDone=1; draw(team); };
@@ -2306,6 +2362,12 @@ const X_SVG='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke=
 /* v6.10: the avatar and the name travel between the row and the card as fixed-position copies (so the card's scroll box
    never clips them), the card's panel morphs between the two shapes, and the row fades out under it on open and back in
    on close, so nothing pops. */
+/* v12.2 (Nov 23): the card's coloured header is drawn by the growing background while the card opens or closes (it used
+   to sit at full size from the first frame while the rest of the card grew out of the tile), then handed back to the
+   header itself, which paints the same pixels. */
+function pzMorph(card,on){ const h=card.querySelector('.pz-h:not(.pz-gh)'); if(!h){ return; }
+  if(on){ const C=card.getBoundingClientRect(), B=h.getBoundingClientRect(); card.style.setProperty('--hb',B.height.toFixed(1)+'px'); card.style.setProperty('--hy',(B.top-C.top).toFixed(1)+'px'); card.classList.add('morph'); }
+  else card.classList.remove('morph'); }
 function pzGhost(w,el,r,tc){ const g=document.createElement('div'); g.className='pz-h pz-gh'; if(tc) g.style.setProperty('--tc',tc);
   Object.assign(g.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'}); g.appendChild(el.cloneNode(true)); w.appendChild(g); return g; }
 function pzMap(src,card){ const a0=src.querySelector('.av'), a1=card.querySelector('.pz-h .av'), n0=src.querySelector('.plc-h b'), n1=card.querySelector('.pz-t');
@@ -2317,13 +2379,13 @@ function openPlayer(pid,mk,src){ const p=D.players[pid]; if(!p||PZ) return; cons
   w.innerHTML=`<div class="pz-scrim"></div><div class="pz-card" role="dialog" aria-modal="true" aria-label="${esc(p.name)}" style="--tc:${tc}"><div class="pz-bg"></div><button class="pz-x press" type="button" aria-label="Close">${X_SVG}</button>
    <div class="pz-sc"><div class="pz-h" style="--tc:${tc}"><span class="av">${esc(initials(p.name))}</span><div class="pz-t"><h2>${esc(p.name)}</h2><div class="sm muted">${p.pos} · ${esc(TEAMN[p.team]||p.team)} ${home?'vs':'at'} ${esc(TEAMN[opp]||opp)}${g?' · '+dayShort(g)+' '+fmtTime(g.time):''} ${statusTag(p)}</div></div></div>
    ${p.detail?`<p class="pz-det xs muted">${esc(p.detail)}</p>`:''}<div class="pfull"></div></div></div>`;
-  document.body.appendChild(w); mountPlayer(w.querySelector('.pfull'),pid,mk,false); document.body.style.overflow='hidden';
+  document.body.appendChild(w); { const calm=RENDER_CALM; RENDER_CALM=true; mountPlayer(w.querySelector('.pfull'),pid,mk,false); RENDER_CALM=calm; } document.body.style.overflow='hidden';
   PZ={w,src,pid,tc}; const card=w.querySelector('.pz-card');
   w.querySelector('.pz-x').addEventListener('click',()=>closePlayer()); w.querySelector('.pz-scrim').addEventListener('click',()=>closePlayer());
   card.querySelector('.pz-x').focus({preventScroll:true});
   if(RM()||!src||!src.isConnected){ card.style.minHeight=card.offsetHeight+'px'; grow(w); return; }
   const C=card.getBoundingClientRect(), S=src.getBoundingClientRect(), sx=S.width/C.width, sy=S.height/C.height, R=22, T=540;
-  const bg=card.querySelector('.pz-bg'), E='cubic-bezier(.2,.9,.22,1)';
+  const bg=card.querySelector('.pz-bg'), E='cubic-bezier(.2,.9,.22,1)'; pzMorph(card,true); setTimeout(()=>{ if(PZ&&PZ.w===w&&!PZ.closing) pzMorph(card,false); },T+20);
   bg.animate([{transform:`translate(${S.left-C.left}px,${S.top-C.top}px) scale(${sx},${sy})`,borderRadius:`${R/sx}px / ${R/sy}px`,opacity:0,boxShadow:'0 0 0 rgba(0,0,0,0)'},{opacity:1,offset:.22},
               {transform:'none',borderRadius:`${R}px`,opacity:1}],{duration:T,easing:E,fill:'backwards'});
   w.querySelector('.pz-scrim').animate([{opacity:0},{opacity:1}],{duration:340,easing:'ease-out',fill:'backwards'});
@@ -2337,11 +2399,12 @@ function openPlayer(pid,mk,src){ const p=D.players[pid]; if(!p||PZ) return; cons
   items.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(-18px)'},{opacity:1,transform:'none'}],{duration:420,delay:180+Math.min(i,8)*55,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}));
   setTimeout(()=>{ if(PZ&&PZ.w===w) card.style.minHeight=card.offsetHeight+'px'; },T+40); grow(w); }
 function closePlayer(instant){ if(!PZ||PZ.closing) return; const {w,src,tc}=PZ; PZ.closing=1; tip(null);
-  const done=()=>{ w.remove(); if(src) src.classList.remove('lifted'); PZ=null; document.body.style.overflow=''; if(src&&src.isConnected&&!instant) src.focus({preventScroll:true}); };
+  const tav=src&&src.querySelector('.av');
+  const done=()=>{ w.remove(); if(tav) tav.style.visibility=''; if(src) src.classList.remove('lifted'); PZ=null; document.body.style.overflow=''; if(src&&src.isConnected&&!instant) src.focus({preventScroll:true}); };
   if(instant||RM()){ done(); return; }
   const card=w.querySelector('.pz-card'), bg=card.querySelector('.pz-bg'), C=card.getBoundingClientRect(), E='cubic-bezier(.32,.72,0,1)', T=460;
   const S=src&&src.isConnected?src.getBoundingClientRect():null, onScreen=S&&S.bottom>0&&S.top<innerHeight&&S.width>0;
-  const sc=card.querySelector('.pz-sc'), x=card.querySelector('.pz-x');
+  const sc=card.querySelector('.pz-sc'), x=card.querySelector('.pz-x'); if(onScreen) pzMorph(card,true);
   [...sc.children].filter(c=>!c.classList.contains('pz-h')).forEach(el=>el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-6px)'}],{duration:150,easing:'ease-in',fill:'forwards'}));
   x.animate([{opacity:1},{opacity:0,transform:'scale(.7)'}],{duration:140,fill:'forwards'});
   w.querySelector('.pz-scrim').animate([{opacity:1},{opacity:0}],{duration:T*.85,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
@@ -2350,7 +2413,8 @@ function closePlayer(instant){ if(!PZ||PZ.closing) return; const {w,src,tc}=PZ; 
   const a=bg.animate([{transform:'none',borderRadius:`${R}px`,opacity:1},{opacity:1,offset:.7},{transform:`translate(${S.left-C.left}px,${S.top-C.top}px) scale(${sx},${sy})`,borderRadius:`${R/sx}px / ${R/sy}px`,opacity:0,boxShadow:'0 0 0 rgba(0,0,0,0)'}],{duration:T,easing:E,fill:'forwards'});
   src.classList.remove('lifted'); src.animate([{opacity:0},{opacity:0,offset:.45},{opacity:1}],{duration:T,easing:'linear',fill:'backwards'});
   const M=pzMap(src,card);
-  if(M.ta){ const gA=pzGhost(w,M.a1,M.ra,tc); M.a1.style.visibility='hidden'; gA.animate([{transform:'none',opacity:1},{opacity:1,offset:.85},{transform:M.ta,opacity:0}],{duration:T,easing:E,fill:'forwards'}); }
+  /* v12.2: the initials box lands on the tile fully opaque and the tile's own box appears only then: no pale or doubled box */
+  if(M.ta){ const gA=pzGhost(w,M.a1,M.ra,tc); M.a1.style.visibility='hidden'; if(tav) tav.style.visibility='hidden'; gA.animate([{transform:'none'},{transform:M.ta}],{duration:T,easing:E,fill:'forwards'}); }
   if(M.tn){ const gN=pzGhost(w,M.n1,M.rn); M.n1.style.visibility='hidden'; gN.animate([{transform:'none',opacity:1},{opacity:1,offset:.3},{transform:M.tn,opacity:0}],{duration:T,easing:E,fill:'forwards'}); }
   a.onfinish=done; }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&PZ) closePlayer(); });
@@ -3388,7 +3452,7 @@ function stagePage(g){ const pg=document.createElement('div'); pg.className='stg
   v.mount(pg); pg._tabs=()=>stageTabs(pg); pg._tabs(); return pg; }
 /* v11: the page's sections drop in one after another below the hero; the hero itself is the card that grew */
 function waterfall(root,delay){ if(RM()) return; let i=0; const H=innerHeight;
-  root.querySelectorAll('.gpad > .stg-tabs, .stg-panel:not([hidden]) > *').forEach(c=>{ if(i>9) return; const r=c.getBoundingClientRect(); if(r.top>H*1.05||r.height===0) return;
+  const pan=root.querySelector('.stg-panel:not([hidden])'); [root.querySelector('.gpad > .stg-tabs'),...(pan?cascadeItems(pan):[])].forEach(c=>{ if(!c||i>9) return; const r=c.getBoundingClientRect(); if(r.top>H*1.05||r.height===0) return;
     c.animate([{opacity:0,transform:'translateY(-16px)'},{opacity:1,transform:'none'}],{duration:480,delay:delay+i++*48,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}); }); }
 function drawStageBar(d){ const {el,i,gs}=STG, g=gs[i], bar=el.querySelector('.stg-bar');
   if(!bar.dataset.f){ bar.dataset.f='1';
@@ -3410,6 +3474,38 @@ function stageGhost(el,src,S){ const gh=src.cloneNode(true); gh.removeAttribute(
   const w=src.closest('.gwrap'); if(w){ gh.style.setProperty('--ta',w.style.getPropertyValue('--ta')); gh.style.setProperty('--th',w.style.getPropertyValue('--th')); }
   const box=document.createElement('div'); box.className='stg-ghostbox view sl8'+(src.closest('.view.ov')?' ov':''); box.setAttribute('aria-hidden','true'); box.appendChild(gh);
   Object.assign(gh.style,{position:'absolute',left:S.left+'px',top:S.top+'px',width:S.width+'px',height:S.height+'px',margin:'0',transformOrigin:'0 0'}); el.appendChild(box); return gh; }
+/* ===== v12.3 (Nov 23): the slate card turns into the game header and back. The parts they share (status badge, team chips
+   → crests, team names, the two scores, the projected/final label, the win bar) travel from their place on one to their
+   place on the other, each as two copies moving together (one fading into the other), while the rest of the card fades
+   out and the rest of the header fades in. The page under it still grows from the card as before. ===== */
+function morphPairs(src,hero,g){ const q=(r,x)=>r?r.querySelector(x):null, qa=(r,x)=>r?[...r.querySelectorAll(x)]:[];
+  const tm=qa(hero,'.mh > .tm'), pts=qa(hero,'.mh .pts'), P=[];
+  const B={ca:q(tm[0],'.crest'),ch:q(tm[1],'.crest'),na:q(tm[0],'.tn'),nh:q(tm[1],'.tn'),pa:pts[0],ph:pts[1],lb:q(hero,'.mh .mid b'),bd:q(hero,'.gres .gs-badge'),wp:q(hero,'.wpbig .wp')};
+  if(src.classList.contains('ft')){ const t=qa(src,'.ft-team'), n=qa(src,'.ft-s b');
+    P.push([q(t[0],'.tchip'),B.ca,'t'],[q(t[1],'.tchip'),B.ch,'t'],[q(t[0],'b'),B.na,'t'],[q(t[1],'b'),B.nh,'t'],[n[0],B.pa,'t'],[n[1],B.ph,'t'],[q(src,'.ft-pj'),B.lb,'t'],[q(src,'.ft-top .gs-badge'),B.bd,'t'],[q(src,'.ft-bar'),B.wp,'b']); }
+  else if(src.classList.contains('game')){ const r=qa(src,'.ev-row');
+    P.push([q(r[0],'.tchip'),B.ca,'t'],[q(r[1],'.tchip'),B.ch,'t'],[q(r[0],'.tname'),B.na,'t'],[q(r[1],'.tname'),B.nh,'t']);
+    if(!scoreOf(g)) P.push([q(r[0],'[data-s]'),B.pa,'t'],[q(r[1],'[data-s]'),B.ph,'t']); }
+  return P.filter(([a,b])=>a&&b).map(([a,b,m])=>({a,b,m,ra:a.getBoundingClientRect(),rb:b.getBoundingClientRect()})).filter(x=>x.ra.width&&x.rb.width&&x.ra.height&&x.rb.height); }
+/* a copy of one part, inside bare copies of its ancestors (so the part keeps its styles), placed at rectangle R */
+function flyCopy(box,el,root,R){ const chain=[]; for(let x=el.parentElement;x;x=x.parentElement){ chain.unshift(x); if(x===root) break; }
+  let host=box; chain.forEach(a=>{ const c=a.cloneNode(false); c.removeAttribute('id'); c.removeAttribute('tabindex'); c.removeAttribute('role'); c.classList.add('fly-anc'); host.appendChild(c); host=c; });
+  const c=el.cloneNode(true); c.removeAttribute('id'); c.classList.add('fly-part'); c.removeAttribute('data-mp'); Object.assign(c.style,{left:R.left+'px',top:R.top+'px',width:R.width+'px',height:R.height+'px',visibility:'visible'}); host.appendChild(c); return c; }
+const flyMap=(X,Y,m)=>m==='b'?`translate(${(Y.left-X.left).toFixed(1)}px,${(Y.top-X.top).toFixed(1)}px) scale(${(Y.width/X.width).toFixed(4)},${(Y.height/X.height).toFixed(4)})`
+  :`translate(${(Y.left+Y.width/2-X.left-X.width/2).toFixed(1)}px,${(Y.top+Y.height/2-X.top-X.height/2).toFixed(1)}px) scale(${(Y.height/X.height).toFixed(4)})`;
+function heroRest(hero,MP){ const pb=MP.map(p=>p.b); return [...hero.querySelectorAll('.gres > *, .mh .mid > span:first-child, .mh .mid b, .mh .pts, .mh .tm > *, .wpbig > *, :scope > .hdd, :scope > .mrow')].filter(x=>!pb.some(b=>b===x||b.contains(x)||x.contains(b))); }
+function morph(el,MP,src,hero,open,T,E){ if(!MP.length) return {run(){},end(){}}; const box=document.createElement('div'); box.className='stg-ghostbox stg-flybox view sl8'; box.setAttribute('aria-hidden','true'); el.appendChild(box);
+  const it=MP.map(p=>({p,A:flyCopy(box,p.a,src,p.ra),B:flyCopy(box,p.b,hero,p.rb)})); MP.forEach(p=>{ p.vb=p.b.style.visibility; p.b.style.visibility='hidden'; });
+  /* until run() starts the motion (two frames later on open), only the copies at the starting end are visible */
+  it.forEach(({A,B})=>{ (open?B:A).style.opacity='0'; });
+  const rest=heroRest(hero,MP);
+  return { run(){ it.forEach(({p,A,B})=>{ if(p.m==='b'){ A.style.transformOrigin='0 0'; B.style.transformOrigin='0 0'; } const tA=flyMap(p.ra,p.rb,p.m), tB=flyMap(p.rb,p.ra,p.m), o={duration:T,easing:E,fill:'forwards'};
+      if(open){ A.animate([{transform:'none',opacity:1},{opacity:0,offset:.5},{transform:tA,opacity:0}],o); B.animate([{transform:tB,opacity:0},{opacity:1,offset:.5},{transform:'none',opacity:1}],o); }
+      else { B.animate([{transform:'none',opacity:1},{opacity:1,offset:.35},{opacity:0,offset:.75},{transform:tB,opacity:0}],o); A.animate([{transform:tA,opacity:0},{opacity:0,offset:.35},{opacity:1,offset:.75},{transform:'none',opacity:1}],o); } });
+      rest.forEach(x=>open?x.animate([{opacity:0},{opacity:1}],{duration:T*.36,delay:T*.3,easing:'ease-out',fill:'backwards'}):x.animate([{opacity:1},{opacity:0}],{duration:T*.3,easing:'ease-in',fill:'forwards'})); },
+    end(){ box.remove(); MP.forEach(p=>{ p.b.style.visibility=p.vb||''; }); } }; }
+/* the card copy that fades during the zoom leaves out the parts that travel on their own */
+function markParts(MP,on){ MP.forEach((p,i)=>{ if(on) p.a.setAttribute('data-mp',i); else p.a.removeAttribute('data-mp'); }); }
 /* where a rectangle inside the page would land on the card: transform for the page (origin 0 0) */
 function mapTo(S,A,pgTop){ const k=Math.max(.3,Math.min(1.6,S.width/Math.max(1,A.width))); return {k,t:`translate(${(S.left-k*A.left).toFixed(2)}px,${(S.top-pgTop-k*(A.top-pgTop)).toFixed(2)}px) scale(${k.toFixed(4)})`}; }
 function openStage(gid,src){ if(STG||!D) return; const gs=stageOrder(), i=gs.findIndex(x=>x.id===gid); if(i<0) return; closePlayer(true); tip(null);
@@ -3417,22 +3513,30 @@ function openStage(gid,src){ if(STG||!D) return; const gs=stageOrder(), i=gs.fin
   const el=document.createElement('div'); el.className='stg'+(anim?' pre':''); el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true');
   el.innerHTML='<div class="stg-bar"></div><div class="stg-track"><div class="stg-mini" aria-hidden="true"></div><div class="stg-edge l" aria-hidden="true">'+SVG_L+'</div><div class="stg-edge r" aria-hidden="true">'+SVG_R+'</div></div>';
   html.style.setProperty('--sy',scrollY+'px'); if(anim) el.style.clipPath=clipOf(S,W,H,STG_R);
-  const pg=stagePage(gs[i]); el.querySelector('.stg-track').appendChild(pg); document.body.appendChild(el);
+  const pg=takePre(gs[i])||stagePage(gs[i]); el.querySelector('.stg-track').appendChild(pg); document.body.appendChild(el); stInd(pg,true);
   STG={el,i,gs,pg,src,gid0:gid,busy:anim?1:0}; drawStageBar(0); bindStage(el); stageScroll(pg); stageMini(gs[i]);
   document.body.style.overflow='hidden'; el.querySelector('.stg-x').focus({preventScroll:true});
   const fin=()=>{ if(STG&&STG.el===el&&!STG.closing){ html.classList.add('stg-full'); boardHidden(true); } };
   if(!anim){ html.classList.add('stg-on'); grow(pg); fin(); return; }
   /* first frame: the stage is only the card's rectangle, the hero sits exactly on the card, and a copy of the card covers it */
   const pgTop=el.querySelector('.stg-track').getBoundingClientRect().top, hero=pg.querySelector('.gpad > .ghero');
-  const hr=hero&&hero.getBoundingClientRect(), A=hr&&hr.width?{left:hr.left,top:hr.top,width:hr.width}:{left:0,top:pgTop,width:W};
+  const hr=hero&&hero.getBoundingClientRect(), A=hr&&hr.width?{left:hr.left,top:hr.top,width:hr.width,height:hr.height}:{left:0,top:pgTop,width:W};
+  const MP=hero?morphPairs(src,hero,gs[i]):[];
   const m=mapTo(S,A,pgTop); pg.style.transformOrigin='0 0'; pg.style.transform=m.t;
-  const gh=stageGhost(el,src,S), gT=`translate(${(A.left-S.left).toFixed(2)}px,${(A.top-S.top).toFixed(2)}px) scale(${(1/m.k).toFixed(4)})`;
-  raf2(()=>{ if(!STG||STG.el!==el||STG.closing){ gh.parentNode&&gh.parentNode.remove(); return; }
+  markParts(MP,true); const gh=stageGhost(el,src,S), gT=`translate(${(A.left-S.left).toFixed(2)}px,${(A.top-S.top).toFixed(2)}px) scale(${(1/m.k).toFixed(4)})`; markParts(MP,false);
+  gh.querySelectorAll('[data-mp]').forEach(x=>x.style.visibility='hidden'); const fly=morph(el,MP,src,hero,true,STG_T,STG_E);
+  raf2(()=>{ if(!STG||STG.el!==el||STG.closing){ gh.parentNode&&gh.parentNode.remove(); fly.end(); return; } fly.run(); setTimeout(()=>fly.end(),STG_T+30);
     src.classList.add('lifted'); el.classList.remove('pre'); html.classList.add('stg-on','stg-anim'); setTimeout(()=>html.classList.remove('stg-anim'),STG_T+260);
     el.style.clipPath=''; el.animate([{clipPath:clipOf(S,W,H,STG_R)},{clipPath:'inset(0px 0px 0px 0px round 0px)'}],{duration:STG_T,easing:STG_E});
     pg.style.transform=''; pg.animate([{transform:m.t},{transform:'none'}],{duration:STG_T,easing:STG_E}).onfinish=()=>{ pg.style.transformOrigin=''; if(STG&&STG.el===el) STG.busy=0; };
     gh.animate([{transform:'none'},{transform:gT}],{duration:STG_T,easing:STG_E,fill:'forwards'});
-    gh.animate([{opacity:1},{opacity:0}],{duration:STG_T*(m.k<.75?.24:.34),easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).onfinish=()=>gh.parentNode&&gh.parentNode.remove();
+    /* v12.5: a slate card's copy keeps its box: its contents fade first, the box narrows to the header's height as it
+       grows, then hands over to the header (same colours) as the header's own details come in */
+    if(src.classList.contains('ft')&&A.height){ const gin=gh.querySelector('.ft-in'), r0=parseFloat(getComputedStyle(src).borderTopLeftRadius)||22, r1=(parseFloat(getComputedStyle(hero).borderTopLeftRadius)||26)*m.k, cb=Math.max(0,S.height-A.height*m.k);
+      gh.animate([{clipPath:`inset(0px 0px 0px 0px round ${r0}px)`},{clipPath:`inset(0px 0px ${cb.toFixed(1)}px 0px round ${r1.toFixed(1)}px)`}],{duration:STG_T,easing:STG_E,fill:'forwards'});
+      if(gin) gin.animate([{opacity:1},{opacity:0}],{duration:STG_T*.3,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'});
+      gh.animate([{opacity:1},{opacity:1,offset:.32},{opacity:0,offset:.66},{opacity:0}],{duration:STG_T,easing:'linear',fill:'forwards'}).onfinish=()=>gh.parentNode&&gh.parentNode.remove(); }
+    else gh.animate([{opacity:1},{opacity:0}],{duration:STG_T*(m.k<.75?.24:.34),easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).onfinish=()=>gh.parentNode&&gh.parentNode.remove();
     el.querySelector('.stg-bar').animate([{opacity:0,transform:'translateY(-100%)'},{opacity:1,transform:'none'}],{duration:480,delay:110,easing:STG_E,fill:'backwards'});
     waterfall(pg,120); grow(pg); setTimeout(fin,STG_T+40); }); }
 /* v12: the board behind a full-screen game is only faded (see head.html), so hide it from screen readers and keep Tab inside the game */
@@ -3445,7 +3549,7 @@ function closeStage(instant){ if(!STG||STG.closing) return; const {el,gs,i,pg}=S
   const tr=$('#ftTrack'), ft=fromRow&&rowOk?null:document.querySelector(`.ft[data-fg="${g.id}"]`);
   if(ft&&tr&&tr._go){ const j=tr._idx(g.id); if(j!==tr._cur()) tr._go(j,true); }
   boardHidden(false);
-  const done=()=>{ el.remove(); STG=null; html.classList.remove('stg-on','stg-full','stg-snap','stg-anim'); document.body.style.overflow=''; document.querySelectorAll('.game.lifted,.ft.lifted').forEach(c=>c.classList.remove('lifted')); };
+  const done=()=>{ el.remove(); STG=null; schedPre(); html.classList.remove('stg-on','stg-full','stg-snap','stg-anim'); document.body.style.overflow=''; document.querySelectorAll('.game.lifted,.ft.lifted').forEach(c=>c.classList.remove('lifted')); };
   const refocus=c=>{ if(c&&c.isConnected) c.focus({preventScroll:true}); };
   html.classList.remove('stg-full');
   if(instant||RM()){ done(); if(!instant) refocus(ft||cardOf(g.id)); return; }
@@ -3453,6 +3557,9 @@ function closeStage(instant){ if(!STG||STG.closing) return; const {el,gs,i,pg}=S
   html.classList.add('stg-snap'); html.classList.remove('stg-on'); document.querySelectorAll('.game.lifted,.ft.lifted').forEach(c=>c.classList.remove('lifted'));
   const src=ft||cardOf(g.id); let S=null;
   if(src){ let r=src.getBoundingClientRect(); const lo=110, hi=innerHeight-120; if(r.width&&(r.top<lo||r.bottom>hi)){ window.scrollTo(0,Math.max(0,scrollY+r.top-Math.max(lo,innerHeight*.3))); r=src.getBoundingClientRect(); } if(r.width) S=r; src.classList.add('lifted'); }
+  /* v12.5: the card's parts are measured here, with the board at full size (measuring after the board had gone back to its
+     94% zoomed-out state landed every travelling copy ~5 px off, and the card jumped when it was revealed) */
+  const hero0=pg.querySelector('.gpad > .ghero'), MP=S&&hero0&&pg.scrollTop<=8?morphPairs(src,hero0,g):[];
   html.style.setProperty('--sy',scrollY+'px'); html.classList.add('stg-on','stg-anim'); void html.offsetWidth; html.classList.remove('stg-snap'); requestAnimationFrame(()=>html.classList.remove('stg-on')); setTimeout(()=>html.classList.remove('stg-anim'),STG_C+200);
   const W=innerWidth, H=innerHeight;
   el.querySelector('.stg-bar').animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-60%)'}],{duration:260,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
@@ -3460,34 +3567,63 @@ function closeStage(instant){ if(!STG||STG.closing) return; const {el,gs,i,pg}=S
   if(!S){ el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.96)'}],{duration:300,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).onfinish=()=>{ done(); refocus(src); }; return; }
   /* the hero rides back onto the card if the page is near the top; otherwise the visible part of the page shrinks into it */
   const pgTop=el.querySelector('.stg-track').getBoundingClientRect().top, hero=pg.querySelector('.gpad > .ghero'), sc=pg.scrollTop;
+  /* v12.5: where the header is on screen right now (a pull or a pinch may still be holding the page): the card copy starts there */
+  const hNow=hero&&sc<=8?hero.getBoundingClientRect():null;
   /* the page may still be held by a pull or a pinch (scaled about its own origin): restate that as a transform about 0 0 */
   const cs=getComputedStyle(pg), o=cs.transformOrigin.split(' ').map(parseFloat); let cur='none';
   if(cs.transform&&cs.transform!=='none'){ try{ cur=new DOMMatrix().translate(o[0]||0,o[1]||0).multiply(new DOMMatrix(cs.transform)).translate(-(o[0]||0),-(o[1]||0)).toString(); }catch(e){ cur='none'; } }
   pg.getAnimations().forEach(x=>x.cancel()); pg.style.transform=''; pg.style.borderRadius=''; pg.style.transformOrigin='0 0';
-  let A={left:0,top:pgTop,width:W}; if(hero&&sc<=8){ hero.style.transform=''; hero.style.opacity=''; const hr=hero.getBoundingClientRect(); if(hr.width) A={left:hr.left,top:hr.top,width:hr.width}; }
+  let A={left:0,top:pgTop,width:W}; if(hero&&sc<=8){ hero.style.transform=''; hero.style.opacity=''; const hr=hero.getBoundingClientRect(); if(hr.width) A={left:hr.left,top:hr.top,width:hr.width,height:hr.height}; }
   const m=mapTo(S,A,pgTop);
   pg.animate([{transform:cur},{transform:m.t}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
   const a=el.animate([{clipPath:'inset(0px 0px 0px 0px round 0px)'},{clipPath:clipOf(S,W,H,STG_R)}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
-  const gh=stageGhost(el,src,S), gT=`translate(${(A.left-S.left).toFixed(2)}px,${(A.top-S.top).toFixed(2)}px) scale(${(1/m.k).toFixed(4)})`;
+  const G0=hNow&&hNow.width?hNow:A, gT=`translate(${(G0.left-S.left).toFixed(2)}px,${(G0.top-S.top).toFixed(2)}px) scale(${(G0.width/S.width).toFixed(4)})`;
+  markParts(MP,true); const gh=stageGhost(el,src,S); markParts(MP,false);
+  gh.querySelectorAll('[data-mp]').forEach(x=>x.style.visibility='hidden'); morph(el,MP,src,hero,false,STG_C,STG_CE).run();
   gh.animate([{transform:gT},{transform:'none'}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
-  gh.animate([{opacity:0},{opacity:0,offset:.3},{opacity:1}],{duration:STG_C,easing:'linear',fill:'forwards'});
+  /* v12.5: a slate card's copy takes over from the header early (solid, same colours), its box growing from the header's
+     height to the card's, so the page's tabs never show through; the card's contents come back in the second half */
+  if(src.classList.contains('ft')&&MP.length&&A.height){ const gin=gh.querySelector('.ft-in'), r0=parseFloat(getComputedStyle(src).borderTopLeftRadius)||22, r1=(parseFloat(getComputedStyle(hero).borderTopLeftRadius)||26)*m.k, cb=Math.max(0,S.height-A.height*m.k);
+    gh.animate([{clipPath:`inset(0px 0px ${cb.toFixed(1)}px 0px round ${r1.toFixed(1)}px)`},{clipPath:`inset(0px 0px 0px 0px round ${r0}px)`}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
+    gh.animate([{opacity:0},{opacity:1,offset:.25},{opacity:1}],{duration:STG_C,easing:'linear',fill:'forwards'});
+    if(gin) gin.animate([{opacity:0},{opacity:0,offset:.45},{opacity:1}],{duration:STG_C,easing:'linear',fill:'forwards'});
+    pg.querySelectorAll('.gpad > :not(.ghero), .stg-hint').forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:STG_C*.35,easing:'ease-in',fill:'forwards'})); }
+  else { /* v12.5: no header ride (page scrolled down, or a list row): the card copy turns solid early while the page's contents
+       fade out under it, so the two never show through each other */
+    gh.animate([{opacity:0},{opacity:1,offset:.35},{opacity:1}],{duration:STG_C,easing:'linear',fill:'forwards'});
+    const gin=gh.querySelector('.ft-in'); if(gin) gin.animate([{opacity:0},{opacity:0,offset:.45},{opacity:1}],{duration:STG_C,easing:'linear',fill:'forwards'});
+    pg.querySelectorAll('.gpad > *, .stg-hint').forEach(x=>{ if(MP.length&&x.classList.contains('ghero')) return; x.animate([{opacity:1},{opacity:0}],{duration:STG_C*.35,easing:'ease-in',fill:'forwards'}); }); }
   a.onfinish=()=>{ done(); refocus(src); }; }
 function stageGo(d,to){ if(!STG||STG.busy||STG.closing) return; const n=STG.gs.length, j=to!=null?to:STG.i+d; d=Math.sign(j-STG.i);
   const old=STG.pg; if(!d||j<0||j>=n){ springBack(old,d); return; }
   STG.busy=1; tip(null); closePlayer(true);
-  const g=STG.gs[j], pg=stagePage(g), tr=STG.el.querySelector('.stg-track');
-  const T=500, cur=getComputedStyle(old).transform, mx=cur&&cur!=='none'?new DOMMatrix(cur).m41:0, t0=`translateX(calc(${d*100}% + ${Math.round(mx)}px))`;
+  const g=STG.gs[j], tr=STG.el.querySelector('.stg-track'), P=STG.peer&&STG.peer.gid===g.id?STG.peer:null; if(!P) peerDrop(); STG.peer=null;
+  const pg=P?P.pg:stagePage(g);
+  const cur=getComputedStyle(old).transform, mx=cur&&cur!=='none'?new DOMMatrix(cur).m41:0;
+  const t0=P?getComputedStyle(pg).transform:`translateX(calc(${d*100}% + ${Math.round(mx)}px))`, left=P?Math.max(.25,Math.min(1,Math.abs(new DOMMatrix(t0).m41)/innerWidth)):1, T=Math.round(260+240*left);
   if(!RM()){ pg.style.transform=t0; pg.classList.add('in'); }
-  tr.appendChild(pg); STG.i=j; STG.pg=pg; drawStageBar(d); stageScroll(pg); stageMini(g);
+  if(!P) tr.appendChild(pg); pg.classList.remove('peer'); STG.i=j; STG.pg=pg; drawStageBar(d); stageScroll(pg); stageMini(g);
   const lifted=document.querySelector('.game.lifted'); if(lifted) lifted.classList.remove('lifted'); const nc=cardOf(g.id); if(nc) nc.classList.add('lifted');
   const fin=()=>{ old.remove(); if(STG) STG.busy=0; };
   if(RM()){ fin(); grow(pg); return; }
   /* v11: the next page slides in whole, with everything already in place; the old one sinks back. Starts after the new
      page's first paint so the slide never jumps ahead. */
-  raf2(()=>{ old.style.transform=''; old.style.opacity=''; old.style.borderRadius='';
-    old.animate([{transform:cur&&cur!=='none'?cur:'none',opacity:1},{transform:`translateX(${-d*28}%) scale(.94)`,opacity:.25}],{duration:T,easing:STG_E,fill:'forwards'}).onfinish=fin;
+  (P?(f=>f()):raf2)(()=>{ old.style.transform=''; old.style.opacity=''; old.style.borderRadius='';
+    /* v12.2: the old page slides away at a slower rate under the new one (no fade, no shrink: fading it toward the
+       background washed it out to white in light mode); the two always overlap, so no background shows between them */
+    const W=tr.clientWidth||innerWidth, oT=d>0?Math.min(mx,-.28*W):Math.max(mx,.28*W);
+    old.animate([{transform:cur&&cur!=='none'?cur:'none'},{transform:`translateX(${oT.toFixed(1)}px)`}],{duration:T,easing:STG_E,fill:'forwards'}).onfinish=fin;
     pg.style.transform=''; pg.animate([{transform:t0},{transform:'none'}],{duration:T,easing:STG_E}).onfinish=()=>pg.classList.remove('in');
     grow(pg); }); }
+/* v12.2 (Nov 23): a sideways drag brings the neighbouring game in with the finger (it used to uncover blank background,
+   a white flash in light mode); letting go finishes that same slide, a short drag slides both back */
+function peerFor(d){ if(!STG) return null; if(STG.peer&&STG.peer.d===d) return STG.peer; peerDrop(); const j=STG.i+d; if(j<0||j>=STG.gs.length) return null;
+  const g=STG.gs[j], pg=stagePage(g); pg.classList.add('peer'); pg.style.transform=`translateX(${d*100}%)`; STG.el.querySelector('.stg-track').appendChild(pg); stInd(pg,true);
+  STG.peer={d,gid:g.id,pg}; return STG.peer; }
+function peerDrop(){ if(STG&&STG.peer){ STG.peer.pg.remove(); STG.peer=null; } }
+function peerBack(pg){ const P=STG&&STG.peer; if(!P){ springBack(pg,0); return; } STG.peer=null; const E='cubic-bezier(.22,1,.36,1)', a=getComputedStyle(pg).transform, b=getComputedStyle(P.pg).transform;
+  pg.style.transform=''; if(RM()){ P.pg.remove(); return; }
+  pg.animate([{transform:a},{transform:'none'}],{duration:380,easing:E}); P.pg.animate([{transform:b},{transform:`translateX(${P.d*100}%)`}],{duration:380,easing:E,fill:'forwards'}).onfinish=()=>P.pg.remove(); }
 function springBack(pg,d){ const cur=getComputedStyle(pg).transform; pg.style.transform=''; pg.style.opacity='';
   if(RM()) return; if(cur&&cur!=='none') pg.animate([{transform:cur},{transform:'none'}],{duration:480,easing:'cubic-bezier(.34,1.4,.64,1)'});
   else if(d) pg.animate([{transform:'none'},{transform:`translateX(${-d*26}px)`},{transform:'none'}],{duration:420,easing:'cubic-bezier(.34,1.4,.64,1)'}); }
@@ -3505,11 +3641,13 @@ function bindStage(el){
     if(G.pinch){ if(t.length<2) return; G.r=Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)/G.d0; const s=Math.max(.72,Math.min(1.04,G.r)); pg.style.transform=`scale(${s})`; pg.style.borderRadius=`${(1-s)*120}px`; return; }
     const dx=t[0].clientX-G.x, dy=t[0].clientY-G.y;
     if(!G.mode){ if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.25) G.mode='x'; else if(dy>10&&G.top&&pg.scrollTop<=0&&dy>Math.abs(dx)*1.25) G.mode='y'; else if(Math.abs(dy)>10){ G=null; return; } else return; }
-    if(G.mode==='x'){ const edge=(STG.i===0&&dx>0)||(STG.i===STG.gs.length-1&&dx<0), v=edge?dx*.28:dx; G.dx=v; pg.style.transform=`translateX(${v}px) scale(${1-Math.min(.05,Math.abs(v)/innerWidth*.12)})`; edgeHint(v); }
+    if(G.mode==='x'){ const edge=(STG.i===0&&dx>0)||(STG.i===STG.gs.length-1&&dx<0), v=edge?dx*.28:dx; G.dx=v;
+      if(edge){ peerDrop(); pg.style.transform=`translateX(${v}px) scale(${1-Math.min(.05,Math.abs(v)/innerWidth*.12)})`; edgeHint(v); }
+      else { const P=peerFor(dx<0?1:-1); pg.style.transform=`translateX(${v}px)`; if(P) P.pg.style.transform=`translateX(calc(${P.d*100}% + ${v}px))`; edgeHint(0); } }
     else { const v=Math.max(0,dy); G.dy=v; const s=1-Math.min(.14,v/1600); pg.style.transform=`translateY(${v*.55}px) scale(${s})`; pg.style.borderRadius=`${Math.min(28,v/5)}px`; } },{passive:true});
   const end=()=>{ if(!G||!STG){ G=null; return; } const pg=STG.pg, g=G; G=null; edgeHint(0);
     if(g.pinch){ pg.style.borderRadius=''; if(g.r<.84){ closeStage(); return; } springBack(pg,0); return; }
-    if(g.mode==='x'){ const v=g.dx||0, vel=Math.abs(v)/Math.max(1,performance.now()-g.t0); if(Math.abs(v)>innerWidth*.2||(vel>.55&&Math.abs(v)>40)) stageGo(v<0?1:-1); else springBack(pg,0); return; }
+    if(g.mode==='x'){ const v=g.dx||0, vel=Math.abs(v)/Math.max(1,performance.now()-g.t0); if(STG.peer&&(Math.abs(v)>innerWidth*.2||(vel>.55&&Math.abs(v)>40))&&Math.sign(-v)===STG.peer.d) stageGo(STG.peer.d); else if(STG.peer) peerBack(pg); else springBack(pg,0); return; }
     if(g.mode==='y'){ pg.style.borderRadius=''; if((g.dy||0)>110) closeStage(); else springBack(pg,0); } };
   tr.addEventListener('touchend',end); tr.addEventListener('touchcancel',end);
   /* trackpads: two-finger sideways swipe changes game, pinch (ctrl + wheel) zooms out */
@@ -3554,11 +3692,12 @@ function gameCardV8(g){ const started=Date.now()>=kick(g); const st=started?'<sp
    ${row(g.away,'a')}${row(g.home,'h')}
    <div class="ev-foot"><div class="wp" aria-hidden="true"><i data-w="a" style="width:50%;--tc:${TEAMC[g.away]}"></i><i data-w="h" style="width:50%;--tc:${TEAMC[g.home]}"></i></div><span class="mkt num" data-m></span></div>
    <div class="gpick" data-tp hidden></div></button><div class="gacc"><div class="gbody"><div class="gpad"></div></div></div></div>`; }
-function fillGame(g){ { const calm=RENDER_CALM; if(!GDD) RENDER_CALM=true; fillGameV6(g); RENDER_CALM=calm; } const s=gameStats(g), el=cardOf(g.id);
+function fillGame(g){ { const calm=RENDER_CALM; if(!GDD) RENDER_CALM=true; fillGameV6(g); RENDER_CALM=calm; } const s=gameStats(g), el=cardOf(g.id); setShare(el,s.wa);
   if(el){ const aw=s.wa>=s.wh; el.querySelector('[data-pw="a"]').textContent=pct(s.wa); el.querySelector('[data-pw="h"]').textContent=pct(s.wh);
     el.querySelector('[data-ps="a"]').textContent=sg(-s.spreadHome); el.querySelector('[data-ps="h"]').textContent=sg(s.spreadHome);
     el.querySelector('[data-cw="a"]').classList.toggle('fav',aw); el.querySelector('[data-cw="h"]').classList.toggle('fav',!aw);
     el.querySelector('[data-cs="a"]').classList.toggle('fav',aw); el.querySelector('[data-cs="h"]').classList.toggle('fav',!aw); }
+  if(g.id===FT_CUR&&!PRE) schedPre();
   document.querySelectorAll(`.ft[data-fg="${g.id}"]`).forEach(f=>{ const calm=RENDER_CALM; if(!f.classList.contains('cur')) RENDER_CALM=true; ftFill(f,g,s); RENDER_CALM=calm; }); }
 /* ===== v12 (Nov 23): the big game cards are the slate. Every game of the week is a card, in kickoff order, and the
    carousel opens on the game that matters now (in progress, else the next kickoff). Each card says where its game stands
@@ -3585,9 +3724,17 @@ function gState0(g,now){ const k=kick(g), sc=scoreOf(g);
 function ftStart(gs){ if(FT_CUR){ const i=gs.findIndex(g=>g.id===FT_CUR); if(i>=0) return i; }
   const S=gs.map(g=>gState(g).st); for(const k of ['live','up','done']){ const i=S.indexOf(k); if(i>=0) return i; } return 0; }
 function featuredGames(gs){ return gs; }
+/* v12.5: the front card's game page is built ahead of time in idle moments, so a tap only has to show it */
+let PRE=null, PRE_T=0;
+const preKey=g=>[g.id,STAB,D.built,LOG&&LOG.updated,JSON.stringify(QBSEL),gState(g).st].join('|');
+function takePre(g){ const P=PRE; PRE=null; return P&&P.gid===g.id&&P.key===preKey(g)&&P.sim===SIM[g.id]?P.pg:null; }
+function schedPre(){ clearTimeout(PRE_T); PRE_T=setTimeout(()=>{ const ric=window.requestIdleCallback||(f=>setTimeout(f,1)); ric(()=>{ if(STG||PZ||VIEW!=='slate'||!FT_CUR||!D) return; const g=D.games.find(x=>x.id===FT_CUR); if(!g||!SIM[g.id]) return;
+  if(PRE&&PRE.gid===g.id&&PRE.key===preKey(g)&&PRE.sim===SIM[g.id]) return; try{ PRE={gid:g.id,key:preKey(g),sim:SIM[g.id],pg:stagePage(g)}; }catch(e){ PRE=null; } },{timeout:2000}); },400); }
 /* the game page's header says the same: a status line above the matchup once the game has kicked off */
-function heroStatus(g){ const S=gState(g); if(S.st==='up') return ''; const r=S.pk.n?S.pk:S.all;
-  return `<div class="gres" data-st="${S.st}">${gsBadge(S.st)}<span class="gres-t">${S.sc?`Final <b class="num">${g.away} ${S.sc.a}, ${g.home} ${S.sc.h}</b>`:S.st==='live'?`Kicked off ${fmtTime(g.time)} · bets grade after the final`:'Waiting on the final score'}</span>${S.st==='graded'&&r.n?`<span class="gres-r num">${S.pk.n?'Picks':'Bets'} ${r.w}–${r.l} <b class="${r.u>=0?'pos':'neg'}">${sgnU(r.u)}</b></span>`:''}</div>`; }
+function heroStatus(g,s){ const S=gState(g); if(S.st==='up') return ''; const r=S.pk.n?S.pk:S.all;
+  const pw=s?(s.wh>=.5?g.home:g.away):null, aw=S.sc?(S.sc.a>S.sc.h?g.away:S.sc.h>S.sc.a?g.home:null):null;
+  /* v12.3: finished games show the final score as the big numbers (like their slate card); the projection sits here */
+  return `<div class="gres" data-st="${S.st}">${gsBadge(S.st)}<span class="gres-t">${S.sc&&s?`Projected <b class="num">${Math.round(s.pa)}–${Math.round(s.ph)}</b>${aw?(aw===pw?' <span class="ft-ok">✓</span>':' <span class="ft-no">✗</span>'):''}`:S.sc?`Final <b class="num">${g.away} ${S.sc.a}, ${g.home} ${S.sc.h}</b>`:S.st==='live'?`Kicked off ${fmtTime(g.time)} · bets grade after the final`:'Waiting on the final score'}</span>${S.st==='graded'&&r.n?`<span class="gres-r num">${S.pk.n?'Picks':'Bets'} ${r.w}–${r.l} <b class="${r.u>=0?'pos':'neg'}">${sgnU(r.u)}</b></span>`:''}</div>`; }
 const gsBadge=st=>`<span class="gs-badge" data-st="${st}">${GST_ICON[st]}${GST_L[st]}</span>`;
 const gsTrack=st=>{ const c=GST_K.indexOf(st); return `<span class="ft-prog" aria-hidden="true">${GST_K.map((k,j)=>`<span class="${j<c?'on':j===c?'on cur':''}" style="--k:${j}"><i></i><b>${GST_L[k]}</b></span>`).join('')}</span>`; };
 const wlBar=r=>r.n?`<span class="ft-wl" aria-hidden="true"><i style="width:${(100*r.w/r.n).toFixed(1)}%"></i></span>`:'';
@@ -3605,7 +3752,12 @@ function ftInner(g,S){ const fin=!!S.sc, a=fin?S.sc.a:null, h=fin?S.sc.h:null;
    <span class="ft-foot">${ftBets(S)}<span class="ft-go">Open game <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></span>`; }
 const ftSig=S=>[S.st,S.sc?S.sc.a+'-'+S.sc.h:'',S.nres,S.n,S.all.u.toFixed(2)].join('|');
 const ftLabel=(g,S)=>`${TEAMN[g.away]||g.away} at ${TEAMN[g.home]||g.home}, ${GST_L[S.st]}${S.sc?`, final ${S.sc.a} to ${S.sc.h}`:''}: open game`;
-function ftFill(f,g,s){ const w=f.querySelector('.ft-w'); if(!w) return;
+/* v12.3: a card's colour split follows the model's win chance. For a corner-to-corner gradient the away side's area is
+   2p² (p ≤ ½) or 1 − 2(1 − p)², so p = √(wa/2) or 1 − √((1 − wa)/2) gives an area share of exactly wa, at any card shape. */
+const shareP=wa=>{ wa=Math.max(.03,Math.min(.97,wa)); return wa<=.5?Math.sqrt(wa/2):1-Math.sqrt((1-wa)/2); };
+const shareVars=wa=>`--wa:${wa.toFixed(3)};--wp:${shareP(wa).toFixed(3)}`;
+function setShare(el,wa){ if(!el) return; el.style.setProperty('--wa',wa.toFixed(3)); el.style.setProperty('--wp',shareP(wa).toFixed(3)); }
+function ftFill(f,g,s){ const w=f.querySelector('.ft-w'); if(!w) return; setShare(f,s.wa);
   if(f.dataset.fin!=='1'){ const a=f.querySelector('[data-fs="a"]'), h=f.querySelector('[data-fs="h"]'); tweenNum(a,Math.round(s.pa)); tweenNum(h,Math.round(s.ph));
     a.classList.toggle('lose',s.pa<s.ph); h.classList.toggle('lose',s.ph<s.pa); const b=f.querySelector('.ft-bar i'); if(b) b.style.width=(s.wa*100)+'%';
     const fav=s.wh>=.5?g.home:g.away; w.textContent=`${TEAMN[fav]||fav} ${pct(Math.max(s.wa,s.wh))} to win · total ${fmt1(s.total)}`; return; }
@@ -3619,7 +3771,7 @@ function ftLegend(cnt){ return GST_K.filter(k=>cnt[k]).map(k=>`<button type="but
 function bindFeat(){ const tr=$('#ftTrack'); if(!tr) return; const slides=[...tr.children], dots=[...document.querySelectorAll('#ftDots [data-fd]')]; let cur=-1;
   const step=()=>slides.length>1?slides[1].offsetLeft-slides[0].offsetLeft:Math.max(1,slides[0].offsetWidth);
   const clampI=i=>Math.max(0,Math.min(slides.length-1,i));
-  const mark=i=>{ if(i===cur) return; cur=i; FT_CUR=slides[i].dataset.fg; slides.forEach((s,j)=>s.classList.toggle('cur',j===i)); dots.forEach((d,j)=>{ d.classList.toggle('on',j===i); if(j===i) d.setAttribute('aria-current','true'); else d.removeAttribute('aria-current'); });
+  const mark=i=>{ if(i===cur) return; cur=i; FT_CUR=slides[i].dataset.fg; schedPre(); slides.forEach((s,j)=>s.classList.toggle('cur',j===i)); dots.forEach((d,j)=>{ d.classList.toggle('on',j===i); if(j===i) d.setAttribute('aria-current','true'); else d.removeAttribute('aria-current'); });
     document.querySelectorAll('[data-fgo]').forEach(b=>b.disabled=b.dataset.fgo==='-1'?i===0:i===slides.length-1); };
   const offs=slides.map(s=>s.offsetLeft-slides[0].offsetLeft), w0=step();
   const onScroll=()=>{ const sl=tr.scrollLeft; slides.forEach((s,i)=>{ const v=Math.max(-1,Math.min(1,(offs[i]-sl)/w0)).toFixed(3); if(s._p!==v){ s._p=v; s.style.setProperty('--p',v); } }); mark(clampI(Math.round(sl/w0))); };
@@ -3630,7 +3782,7 @@ function bindFeat(){ const tr=$('#ftTrack'); if(!tr) return; const slides=[...tr
     const j=e.target.closest('[data-fj]'); if(j){ const i=slides.findIndex(s=>s.dataset.st===j.dataset.fj); if(i>=0) go(i); } });
   slides.forEach((s,i)=>s.addEventListener('click',()=>{ if(i!==cur){ go(i); return; } openStage(s.dataset.fg,s); }));
   slides.forEach(s=>s.addEventListener('keydown',e=>{ if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft') return; e.preventDefault(); const i=clampI(cur+(e.key==='ArrowRight'?1:-1)); go(i); slides[i].focus({preventScroll:true}); }));
-  go(ftStart(D.games.slice().sort((a,b)=>kick(a)-kick(b))),true); }
+  const s0=ftStart(D.games.slice().sort((a,b)=>kick(a)-kick(b))); slides.forEach((s,i)=>{ if(i!==s0) s.classList.add('nofx'); }); go(s0,true); }
 /* a card's status moves on its own (kickoff, the final, a refresh that grades it): update only the cards that changed */
 function ftTick(){ const tr=$('#ftTrack'); if(!tr||!D) return; const cnt={}; let ch=0;
   tr.querySelectorAll('.ft').forEach(f=>{ const g=D.games.find(x=>x.id===f.dataset.fg); if(!g) return; const S=gState(g); cnt[S.st]=(cnt[S.st]||0)+1; const sig=ftSig(S); if(sig===f.dataset.sig) return; ch++;
@@ -3703,10 +3855,18 @@ function stageTab(pg,k){ if(k===STAB&&pg.querySelector(`[data-panel="${k}"]:not(
   if(pg.scrollTop>top) pg.scrollTop=top;
   grow(p); if(RM()) return;
   p.animate([{opacity:0,transform:`translateX(${(d||1)*42}px)`},{opacity:1,transform:'none'}],{duration:460,easing:'cubic-bezier(.22,1,.36,1)'});
-  let i=0; p.querySelectorAll('.plc, :scope > .sec, :scope > p, .tpick, .fold').forEach(c=>{ if(i>16) return; c.animate([{opacity:0,transform:'translateY(-14px)'},{opacity:1,transform:'none'}],{duration:480,delay:60+i++*38,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}); }); }
-function stageMini(g){ const s=SIM[g.id]?gameStats(g):null; const m=STG&&STG.el.querySelector('.stg-mini'); if(!m) return;
+  cascadeIn(cascadeItems(p),70); }
+/* v12.2 (Nov 23): rows drop in one after another. Each element gets exactly one animation: never a section and the rows
+   inside it at once, and no CSS entrance animation on the same rows (two overlapping animations on one row made Safari
+   snap each tile when the first one ended, the "shimmy" after the Players cascade). */
+function cascadeItems(root){ const T='.plc,.tpick,.fold', out=[]; const walk=(el,dep)=>{ for(const c of el.children){ if(c.hidden) continue; if(c.matches(T)) out.push(c); else if(dep<3&&c.querySelector(T)) walk(c,dep+1); else out.push(c); } }; walk(root,0); return out; }
+function cascadeIn(items,delay){ if(RM()) return; const H=innerHeight; let i=0;
+  items.forEach(c=>{ if(i>14) return; const r=c.getBoundingClientRect(); if(!r.height||r.top>H*1.05) return; c.getAnimations().forEach(a=>a.cancel());
+    c.animate([{opacity:0,transform:'translateY(-12px)'},{opacity:1,transform:'none'}],{duration:440,delay:delay+i++*36,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}); }); }
+function stageMini(g){ const s=SIM[g.id]?gameStats(g):null; const m=STG&&STG.el.querySelector('.stg-mini'); if(!m) return; const sc=scoreOf(g);
   m.style.setProperty('--ta',TEAMC[g.away]); m.style.setProperty('--th',TEAMC[g.home]);
-  m.innerHTML=`<span class="sm-t">${chip(g.away)}<b class="num">${s?Math.round(s.pa):'–'}</b></span><span class="sm-mid xs num">${s?`${pct(Math.max(s.wa,s.wh))} ${s.wh>=.5?g.home:g.away}`:''}</span><span class="sm-t r"><b class="num">${s?Math.round(s.ph):'–'}</b>${chip(g.home)}</span>`; }
+  const A=sc?sc.a:s?Math.round(s.pa):'–', H=sc?sc.h:s?Math.round(s.ph):'–';
+  m.innerHTML=`<span class="sm-t">${chip(g.away)}<b class="num">${A}</b></span><span class="sm-mid xs num">${sc?'Final':s?`${pct(Math.max(s.wa,s.wh))} ${s.wh>=.5?g.home:g.away}`:''}</span><span class="sm-t r"><b class="num">${H}</b>${chip(g.home)}</span>`; }
 function stageScroll(pg){ const hero=pg.querySelector('.ghero'), m=STG&&STG.el.querySelector('.stg-mini'); if(!hero) return; let raf=0, H=0, last=-1;
   const f=()=>{ raf=0; if(!STG||STG.pg!==pg) return; if(!H) H=Math.max(120,hero.offsetHeight-40); const y=pg.scrollTop, p=Math.max(0,Math.min(1,y/H)); if(Math.abs(p-last)<.002&&p>0&&p<1) return; last=p;
     if(!RM()){ hero.style.transform=`translate3d(0,${(Math.min(y,H)*.38).toFixed(1)}px,0) scale(${(1-p*.07).toFixed(4)})`; hero.style.opacity=(1-p).toFixed(3); }
