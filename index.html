@@ -1506,6 +1506,88 @@ html.vt-ov::view-transition-old(*){animation:vtFade .22s ease-out both}
 /* coming back to a tab: no second cascade */
 .view.calm .game,.view.calm .tool,.view.calm .plk.in,.view.calm .tile,.view.calm .kstats button,.view.calm .ft,.view.calm .plc2,.view.calm .fopt,.view.calm .scard,.view.calm .pn > div,.view.calm .tpick{animation:none}
 
+/* ===== v10 (Nov 22): cleaner screens with disclosures ===== */
+/* one disclosure pattern everywhere: a row with a title, an optional hint and a chevron; the body unfolds below */
+.dd > .acc{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s var(--col)}
+.dd.open > .acc{grid-template-rows:1fr;transition:grid-template-rows .5s var(--exp)}
+.dd > .acc > .acc-in{overflow:hidden;min-height:0;opacity:0;transform:translateY(-6px);transition:opacity .15s var(--col),transform .3s var(--col)}
+.dd.open > .acc > .acc-in{opacity:1;transform:none;transition:opacity .38s .05s var(--exp),transform .5s var(--exp)}
+.dd-h{display:flex;align-items:center;gap:12px;width:100%;min-width:0;border:0;background:none;padding:15px 2px;text-align:left;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dd-t{flex:0 0 auto;font:600 12px/1 var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);transition:color .2s}
+.dd-hint{flex:1 1 auto;min-width:0;text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dd-h .chev{flex:0 0 auto;margin-left:auto;width:18px;height:18px;color:var(--muted);transition:transform .45s var(--exp),color .2s}
+.dd-hint + .chev{margin-left:0}
+.dd.open > .dd-h .chev{transform:rotate(180deg);color:var(--accent)}
+@media (hover:hover){ .dd-h:hover .dd-t,.dd-h:hover .chev{color:var(--ink)} }
+.sec.dd{margin-top:0!important;border-bottom:1px solid var(--line)}
+.sec.dd > .acc > .acc-in::after{content:"";display:block;height:16px}
+:not(.sec.dd) + .sec.dd,.sec.dd:first-child{border-top:1px solid var(--line)}
+.sec.dd + .sec.dd{border-top:0}
+:not(.sec.dd) + .sec.dd{margin-top:22px!important}
+/* page intros behind an "i" */
+.vhead > .vt{display:grid;grid-template-columns:auto auto 1fr;align-items:center;column-gap:12px;min-width:0}
+.vhead > .vt > h1{grid-column:1}
+.ib{grid-column:2;width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line-2);background:var(--panel);color:var(--muted);font:700 14px/1 var(--disp);display:grid;place-items:center;align-self:center}
+.ib[aria-expanded="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.vinfo{grid-column:1/-1}
+.vinfo > .acc > .acc-in > p{margin:10px 0 0}
+/* slate: season pill */
+.sdd{align-self:flex-end;max-width:100%}
+.sdd-h{display:inline-flex;width:auto;gap:12px;padding:9px 14px 9px 16px;border:1px solid var(--line);border-radius:999px;background:linear-gradient(180deg,var(--panel-hi),var(--panel) 70%);box-shadow:inset 0 1px 0 var(--hl),var(--shadow)}
+.sdd-h b{font:700 17px/1 var(--disp);letter-spacing:-.01em}
+.sdd-h .chev{margin-left:2px}
+.sdd > .acc > .acc-in::before{content:"";display:block;height:12px}
+@media (max-width:560px){ .sdd{width:100%} .sdd-h{width:100%} .sdd-h .chev{margin-left:auto} }
+/* slate rows: teams and numbers; details on request */
+.game.ev{cursor:pointer;outline:none}
+.game.ev:focus-visible{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+.game.ev:active:not(:has(.ev-more:active)){transform:scale(.985)}
+.sl8 .games{align-items:start}
+.ev-more{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;margin:6px 0 0;padding:12px 20px 14px 26px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:600;text-align:left;cursor:pointer;transition:color .2s,background-color .25s}
+.ev-more .chev{width:16px;height:16px;margin-left:auto;transition:transform .45s var(--exp)}
+.game.det .ev-more{color:var(--ink)}
+.game.det .ev-more .chev{transform:rotate(180deg);color:var(--accent)}
+@media (hover:hover){ .ev-more:hover{color:var(--ink);background:color-mix(in srgb,var(--panel-2) 60%,transparent)} }
+.ev-det{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s var(--col)}
+.game.det .ev-det{grid-template-rows:1fr;transition:grid-template-rows .5s var(--exp)}
+.ev-detin{overflow:hidden;min-height:0;opacity:0;transition:opacity .15s var(--col)}
+.game.det .ev-detin{opacity:1;transition:opacity .35s .06s var(--exp)}
+.ev-det .ev-foot{padding:2px 20px 14px 26px}
+.ev-det .gpick{margin:0!important}
+.game.ev::before{inset:52px auto auto 0;height:86px}
+.view.ov .ev-more,.view.ov .ev-det{display:none}
+@media (max-width:560px){ .ev-more{padding:11px 14px 13px 18px} .ev-det .ev-foot{padding:2px 14px 13px 18px} .game.ev::before{inset:47px auto auto 0;height:80px} }
+.view.ov .game.ev::before{inset:36px auto 12px 0;height:auto}
+/* game hero: spread and total fold away */
+.hdd{margin-top:14px;border-top:1px solid rgba(255,255,255,.18)}
+.hdd > .dd-h{padding:12px 2px 0}
+.hdd .dd-t{color:rgba(255,255,255,.78)}
+.hdd .dd-h .chev{color:rgba(255,255,255,.7)}
+.hdd.open > .dd-h .chev{color:#fff}
+.hdd .mrow{margin-top:6px;border-top:0}
+.ghero .mrow{padding-bottom:2px}
+/* game Overview */
+.tpicks.clip .tpick:nth-child(n+4){display:none}
+.tp-more{margin-top:12px}
+.stg-panel[data-panel="players"] .sec > .sm.muted{display:none}
+.gi-wx{margin:0 0 10px}
+.stg-panel .sec.dd .note.outs{background:none;border:0;padding:0}
+/* player card rows */
+.pc2 .pline{margin-top:22px}
+.pc2 .pline > .sec.dd:first-child,.pc2 .pline:empty + .prest > .sec.dd:first-child{border-top:1px solid var(--line)}
+.pc2 .prest > .sec.dd:first-child{border-top:0;margin-top:0!important}
+.pc2.cmp .pline{margin-top:14px}
+.pc2.cmp .dd-h{padding:12px 2px}
+.pc2 .sec.dd > .acc > .acc-in::after{height:14px}
+.pc2 .sec.dd .curvebox,.pc2 .sec.dd .games-hist{margin-top:4px}
+/* record and about */
+.ddgrid{display:block;margin-top:24px!important}
+.ddgrid > div > .sec.dd{margin-top:0!important}
+.ddgrid > div:first-child > .sec.dd{border-top:1px solid var(--line)}
+.ddgrid > div + div > .sec.dd{border-top:0}
+.prose .sec.dd .dd-t{font-size:13px;letter-spacing:.08em}
+.prose .sec.dd > .acc > .acc-in > :first-child{margin-top:0}
+
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} html.stg-on main{filter:none} }
 </style>
 
@@ -2170,7 +2252,7 @@ function mountPlayer(el,pid,mkSel,full){ const p=D.players[pid]; const main=MAIN
     q('.hv-line-s').textContent=alt?`${m.L.src==='DK'?'DK':'est.'} ${m.L.l}`:m.L.src==='DK'?(price!=null?`${over?'over':'under'} ${fmtO(price)}`:'no price, −110'):'from season avg';
     const hv=q('.hv-mod'); hv.className='v num hv-mod side '+(over?'over':'under'); hv.textContent=`${over?'O':'U'} ${pct(pr)}`;
     const ed=(pr-implied(price??-110))*100; q('.hv-mod-k').innerHTML='Model'+(lp&&lp.tier==='pick'&&!alt?' <span class="tag pick">Pick</span>':''); q('.hv-mod-s').textContent=alt?`fair ${amer(pr)}`:`edge ${ed>=0?'+':''}${ed.toFixed(1)}`;
-    const r=pbar.querySelector('.rst'); if(r) r.hidden=!alt; pline.innerHTML=lineSecs(m,l,anim); if(anim) grow(pline); };
+    const r=pbar.querySelector('.rst'); if(r) r.hidden=!alt; pline.innerHTML=lineSecs(m,l,anim); foldSecs(el); if(anim) grow(pline); };
   const why=m=>`<div class="sec"><h3>Why this projection</h3><div class="why">${whyHTML(m)}</div></div>`;
   const draw=(mk,first)=>{ cur=ms.find(m=>m.mk===mk); const btn=tabs.querySelector(`[data-mk="${mk}"]`); tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',b===btn?'true':'false')); slide(btn,first);
     if(cur.mk==='ATD'){ const ov=p.lines&&p.lines.ATD&&p.lines.ATD.ov, h=hits(p,'ATD',.5); pn.dataset.k='td';
@@ -2183,6 +2265,7 @@ function mountPlayer(el,pid,mkSel,full){ const p=D.players[pid]; const main=MAIN
       const ld=ladder(m).slice(0,full?6:8);
       prest.innerHTML=`${ld.length?`<div class="sec"><h3>Alt lines</h3><div class="ladder">${ld.map(r=>`<div class="rung"><span class="num"><b>${r.k}+</b></span><div class="pb"><i style="transform:scaleX(0);width:100%" data-grow="scaleX(${r.p.toFixed(3)})"></i></div><span class="r num">${pct(r.p)}</span><span class="r num muted">${r.h.n?r.h.k+'/'+r.h.n:'—'}</span></div>`).join('')}</div><p class="xs muted" style="margin:8px 0 0">Model chance of reaching each number, and games this season he did.</p></div>`:''}
         ${why(m)}`; }
+    foldSecs(el);
     if(!first){ [pn,pbar,pline,prest].forEach((x,i)=>{ if(x.innerHTML&&!RM()) x.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:320,delay:i*40,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}); }); }
     grow(el); };
   draw(cur.mk,true); tabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); if(b.dataset.mk!==cur.mk) draw(b.dataset.mk); }));
@@ -2198,23 +2281,22 @@ function lineSecs(m,l,anim){ const p=m.p, h=hits(p,m.mk,l);
 let PF=store.get('pf',{side:'all',mode:'picks'});
 function weekPicks(){ if(!LOG) return []; return LOG.picks.filter(x=>x.week===D.week&&x.type==='prop'&&x.tier==='pick'&&x.result!=='void'); }
 function renderPicks(){ const ps=weekPicks(); const pend=ps.filter(x=>!x.result);
-  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Picks</h1><p>Props where the model's chance beats the DraftKings price by 4+ points (anytime TDs: 8+). Logged when the line posts and graded from box scores.</p></div>
+  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Picks</h1><p>Props where the model's chance beats the DraftKings price by 4+ points (anytime TDs: 8+). Logged when the line posts and graded from box scores. Where DraftKings' price wasn't pulled, −110 is assumed.</p></div>
     <div class="seg" id="pmode"><button type="button" data-m="picks" aria-pressed="${PF.mode==='picks'}">Model picks</button><button type="button" data-m="alt" aria-pressed="${PF.mode==='alt'}">Alt lines</button></div></div>
     <div id="pbox"></div></section>`;
   $('#pmode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ PF.mode=b.dataset.m; store.set('pf',PF); renderPicks(); }));
   if(PF.mode==='alt'){ renderAlt(); return; }
   const fl=x=>PF.side==='all'||x.side===PF.side;
   const rows=ps.filter(fl).sort((a,b)=>(!!a.result-!!b.result)||b.edge-a.edge);
-  $('#pbox').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div class="chips">${['all','over','under'].map(s=>`<button type="button" class="chip press" data-s="${s}" aria-pressed="${PF.side===s}">${s==='all'?'All':s==='over'?'Overs':'Unders'}</button>`).join('')}</div><span class="sm muted num">${ps.length} picks · ${pend.length} to play${ps.some(x=>x.price_est)?' · −110 assumed where DK price not pulled':''}</span></div>
+  $('#pbox').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div class="chips">${['all','over','under'].map(s=>`<button type="button" class="chip press" data-s="${s}" aria-pressed="${PF.side===s}">${s==='all'?'All':s==='over'?'Overs':'Unders'}</button>`).join('')}</div><span class="sm muted num">${ps.length} picks · ${pend.length} to play</span></div>
    <div class="card">${rows.length?rows.map(pickRow).join(''):'<div class="empty">No picks logged for this week yet. They appear once DraftKings posts player lines.</div>'}</div>`;
   $('#pbox').querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{ PF.side=b.dataset.s; store.set('pf',PF); renderPicks(); }));
   $('#pbox').querySelectorAll('.plk').forEach(b=>b.addEventListener('click',()=>expandUnder(b,b.dataset.p,b.dataset.mk)));
   grow($('#pbox')); }
-function pickRow(x){ const p=D.players[x.pid]; const g=D.games.find(y=>y.id===x.game); const m=p&&g?market(x.pid,x.mk):null;
-  const bet=x.mk==='ATD'?'Anytime TD':`${x.side==='over'?'Over':'Under'} ${x.close_line??x.line} ${MK[x.mk].unit}`;
+function pickRow(x){ const p=D.players[x.pid]; const g=D.games.find(y=>y.id===x.game); const bet=x.mk==='ATD'?'Anytime TD':`${x.side==='over'?'Over':'Under'} ${x.close_line??x.line} ${MK[x.mk].unit}`;
   const res=x.result?`<span class="tag ${x.result}">${x.result==='win'?'Hit':x.result==='loss'?'Miss':x.result}${x.actual!=null?' · '+x.actual:''}</span>`:'';
   return `<button type="button" class="plk press" data-p="${x.pid}" data-mk="${x.mk}"><div class="who"><b>${esc(x.name)}</b><span class="xs muted">${x.team} · ${esc(x.matchup)}${g?' · '+dayShort(g)+' '+fmtTime(g.time):''}</span></div>
-   <div class="mid"><div class="bet"><span class="side ${x.side}">${bet}</span></div>${m&&x.mk!=='ATD'?rangeBar(m,'static'):''}</div>
+   <div class="mid"><div class="bet"><span class="side ${x.side}">${bet}</span></div></div>
    <div class="r"><span class="pc num">${pct(x.p_over!=null?(x.side==='over'?x.p_over:1-x.p_over):x.model_p)}</span><span class="xs muted num">${x.price_est?'est −110':fmtO(x.price)} · edge +${(x.edge*100).toFixed(1)}</span>${res}</div></button>`; }
 function renderAlt(){ const rows=[]; const now=Date.now();
   for(const [pid,p] of Object.entries(D.players)){ if(p.status==='OUT'||p.status==='D') continue; const g=D.games.find(x=>x.id===p.game); if(!g||kick(g)<now) continue; if(p.pos==='QB'&&p.name!==qbOf(g.teams[p.team])) continue;
@@ -3285,7 +3367,7 @@ function countUp(root){ if(RM()||!root||!root.querySelectorAll) return; const li
 let SLF=store.get('slf','all'), STAB=store.get('stab','overview');
 const SLOT_SHORT={'Sunday morning':'Sun AM','Sunday early':'Sun 1 PM','Sunday late':'Sun 4 PM','Sunday night':'SNF'};
 const slotLbl=n=>SLOT_SHORT[n]||(n.replace(' night','').slice(0,3)+' night');
-function gameCard(g){ const started=Date.now()>=kick(g); const st=started?'<span class="status live">Started</span>':g.props_live?'<span class="status on">Lines up</span>':'<span class="status">Lines soon</span>';
+function gameCardV8(g){ const started=Date.now()>=kick(g); const st=started?'<span class="status live">Started</span>':g.props_live?'<span class="status on">Lines up</span>':'<span class="status">Lines soon</span>';
   const row=(t,k)=>`<div class="ev-row" data-t="${k}">${chip(t)}<span class="tname">${esc(TEAMN[t]||t)}</span><span class="ev-c"><b class="num skel" data-s="${k}">00</b></span><span class="ev-c" data-cw="${k}"><b class="num" data-pw="${k}">–</b></span><span class="ev-c" data-cs="${k}"><b class="num" data-ps="${k}">–</b></span></div>`;
   return `<div class="gwrap" data-gw="${g.id}" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}"><button type="button" class="game ev press" data-g="${g.id}" style="--i:${GI++}" aria-label="${esc(TEAMN[g.away]||g.away)} at ${esc(TEAMN[g.home]||g.home)}: open game">
    <div class="ev-head"><span class="ev-when num">${dayShort(g)} ${fmtTime(g.time)}</span>${st}<span class="ev-lbl">Proj</span><span class="ev-lbl">Win</span><span class="ev-lbl">Spread</span></div>
@@ -3322,14 +3404,14 @@ function renderSlate(){ const gs=D.games.slice().sort((a,b)=>kick(a)-kick(b)); c
   if(SLF!=='all'&&!slots.some(s=>s.key===SLF)) SLF='all';
   const nLines=D.games.filter(g=>g.props_live).length; GI=0; const fs=featuredGames(gs);
   $('#main').innerHTML=`<section class="view sl8${OV?' ov':''}">
-    <div class="sl-top"><div class="sl-title"><span class="eyebrow num">NFL ${esc(D.season)} · Week ${esc(D.week)} · ${N.toLocaleString()} sims a game</span><h1>This week's <em>board</em></h1></div>${seasonStats()}</div>
+    <div class="sl-top"><div class="sl-title"><span class="eyebrow num">NFL ${esc(D.season)} · Week ${esc(D.week)} · ${N.toLocaleString()} sims a game</span><h1>This week's <em>board</em></h1></div>${seasonDD()}</div>
     ${featHTML(fs)}
     <div class="sl-bar"><div class="sl-pills" id="slPills" role="tablist" aria-label="Kickoff windows"><i class="sl-ind" aria-hidden="true"></i><button type="button" role="tab" data-sf="all" aria-selected="${SLF==='all'}">All games</button>${slots.map(s=>`<button type="button" role="tab" data-sf="${s.key}" aria-selected="${SLF===s.key}">${esc(slotLbl(s.name))}<span class="num">${s.games.length}</span></button>`).join('')}</div>
       <button type="button" class="iconbtn press" id="ovBtn" aria-pressed="${!!OV}" aria-label="${OV?'Zoom in to full game rows':'Zoom out to all games'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg></button></div>
     <div class="sl-list">${slots.map(s=>`<div class="slot" data-slot="${s.key}"${SLF!=='all'&&SLF!==s.key?' hidden':''}><h2><span>${esc(s.name)}</span><span class="num">${esc(s.games[0].day.slice(0,3))} ${esc(s.games[0].date.slice(5).replace('-','/'))}</span></h2><div class="games">${s.games.map(gameCard).join('')}</div></div>`).join('')}</div>
     <p class="xs muted sl-meta num">${D.games.length} games · ${nLines} with player lines${D.byes&&D.byes.length?` · bye: ${D.byes.join(', ')}`:''} · tap a game to zoom in, swipe between games, pinch the board to see every game at once</p></section>`;
   D.games.forEach(g=>{ if(SIM[g.id]) fillGame(g); });
-  $('#main').querySelectorAll('.game').forEach(b=>b.addEventListener('click',()=>toggleGame(b.parentElement)));
+  bindRows();
   const ob=$('#ovBtn'); if(ob) ob.addEventListener('click',()=>setOverview(!OV)); bindSlateZoom(); bindFeat();
   const pills=$('#slPills'); pills.querySelectorAll('[data-sf]').forEach(b=>b.addEventListener('click',()=>setSlotFilter(b.dataset.sf)));
   requestAnimationFrame(()=>moveInd(true)); }
@@ -3358,7 +3440,7 @@ function stageTabs(pg){ const pad=pg.querySelector('.gpad'); if(!pad) return; co
   if(!P.overview.children.length) P.overview.innerHTML='<div class="empty">No picks or news for this game yet.</div>';
   pad.innerHTML=''; pad.append(hero,bar,wrap);
   bar.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',()=>stageTab(pg,b.dataset.st)));
-  requestAnimationFrame(()=>stInd(pg,true)); }
+  stageTidy(pg); requestAnimationFrame(()=>stInd(pg,true)); }
 function stInd(pg,inst){ const bar=pg.querySelector('.stg-tabs'); if(!bar) return; const b=bar.querySelector('[aria-selected="true"]'), i=bar.querySelector('.st-ind'); if(!b) return;
   if(inst) i.style.transition='none'; i.style.width=b.offsetWidth+'px'; i.style.transform=`translateX(${b.offsetLeft}px)`; if(inst){ void i.offsetWidth; i.style.transition=''; } }
 function stageTab(pg,k){ if(k===STAB&&pg.querySelector(`[data-panel="${k}"]:not([hidden])`)) return; const order=STABS.map(x=>x[0]), d=Math.sign(order.indexOf(k)-order.indexOf(STAB)); STAB=k; store.set('stab',k);
@@ -3379,6 +3461,76 @@ function stageScroll(pg){ const hero=pg.querySelector('.ghero'), m=STG&&STG.el.q
     const tb=pg.querySelector('.stg-tabs'); if(tb) tb.style.setProperty('--p',p.toFixed(3)); if(m){ m.style.setProperty('--p',p.toFixed(3)); m.classList.toggle('on',p>.92); } };
   addEventListener('resize',()=>{ H=0; },{passive:true});
   pg.addEventListener('scroll',()=>{ if(!raf) raf=requestAnimationFrame(f); },{passive:true}); f(); }
+
+/* ===== v10 (Nov 22): cleaner screens. Secondary information moves into disclosures that open in place:
+   page intros behind an "i", the season record in one pill, game-row details, the game Overview, the player card
+   sections, Record's tables and the About page. ===== */
+const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const PC_OPEN=new Set();   // player-card sections the viewer opened this session stay open for the next player
+function secToDD(sec,o){ o=o||{}; if(!sec||sec.classList.contains('dd')) return null; const h=sec.querySelector(':scope > h3'); if(!h) return null;
+  const full=h.textContent.trim(), cut=full.indexOf(' · '), title=o.title||(cut>0?full.slice(0,cut):full), hint=o.hint!=null?o.hint:(cut>0?full.slice(cut+3):'');
+  const btn=document.createElement('button'); btn.type='button'; btn.className='dd-h'; btn.setAttribute('aria-expanded',!!o.open);
+  btn.innerHTML=`<span class="dd-t">${esc(title)}</span>${hint?`<span class="dd-hint num">${esc(hint)}</span>`:''}${CHEV}`;
+  const acc=document.createElement('div'); acc.className='acc'; const inn=document.createElement('div'); inn.className='acc-in';
+  [...sec.childNodes].filter(n=>n!==h).forEach(n=>inn.appendChild(n)); acc.appendChild(inn); h.replaceWith(btn); sec.appendChild(acc);
+  sec.classList.add('dd'); sec.dataset.k=title; if(o.open) sec.classList.add('open'); return sec; }
+function replayInner(d){ if(RM()) return; const E='cubic-bezier(.22,1,.36,1)';
+  d.querySelectorAll('.games-hist .bar').forEach((x,i)=>x.animate([{transform:'scaleY(.02)'},{transform:'none'}],{duration:520,delay:60+i*28,easing:E,fill:'backwards'}));
+  d.querySelectorAll('.ladder .pb i, .rung .pb i').forEach((x,i)=>{ const t=getComputedStyle(x).transform; x.animate([{transform:'scaleX(0)'},{transform:t==='none'?'none':t}],{duration:600,delay:60+i*35,easing:E,fill:'backwards'}); });
+  d.querySelectorAll('svg.curve').forEach(s=>{ s.classList.remove('anim'); void s.getBoundingClientRect(); s.classList.add('anim'); });
+  d.querySelectorAll('.chart .draw').forEach(s=>{ s.style.animation='none'; void s.getBoundingClientRect(); s.style.animation=''; }); }
+function ddToggle(d,open){ const h=d.querySelector(':scope > .dd-h'); if(h) h.setAttribute('aria-expanded',open);
+  if(open){ raf2(()=>{ d.classList.add('open'); grow(d); replayInner(d); }); } else d.classList.remove('open');
+  if(d.closest('.pc2')&&d.dataset.k){ if(open) PC_OPEN.add(d.dataset.k); else PC_OPEN.delete(d.dataset.k); } }
+document.addEventListener('click',e=>{ const h=e.target.closest('.dd-h'); if(!h) return; const d=h.parentElement; if(!d||!d.classList.contains('dd')) return; e.stopPropagation(); ddToggle(d,!d.classList.contains('open')); },true);
+/* page intros sit behind a small "i" next to the title */
+function infoize(root){ (root||document).querySelectorAll('.vhead').forEach(vh=>{ const box=vh.firstElementChild, h=box&&box.querySelector(':scope > h1'), p=box&&box.querySelector(':scope > p'); if(!h||!p||box.querySelector('.ib')) return;
+  box.classList.add('vt'); const b=document.createElement('button'); b.type='button'; b.className='ib press'; b.setAttribute('aria-label','What this page shows'); b.setAttribute('aria-expanded','false'); b.textContent='i';
+  const d=document.createElement('div'); d.className='vinfo dd'; d.innerHTML='<div class="acc"><div class="acc-in"></div></div>'; d.querySelector('.acc-in').appendChild(p); h.after(b); b.after(d);
+  b.addEventListener('click',()=>{ const o=!d.classList.contains('open'); b.setAttribute('aria-expanded',o); if(o) raf2(()=>d.classList.add('open')); else d.classList.remove('open'); }); }); }
+/* per-page tidy-up after each render */
+function tidyRecord(){ const m=$('#main'); m.querySelectorAll('.view > .grid2 .sec, .view > .sec').forEach(s=>{ const t=(s.querySelector(':scope > h3')||{}).textContent||''; if(/By market|Calibration|Recent results/.test(t)) secToDD(s,{hint:/By market/.test(t)?'record by prop type':/Calibration/.test(t)?'stated vs actual':'last 25 graded picks'}); });
+  const g=m.querySelector('.view > .grid2'); if(g) g.classList.add('ddgrid'); }
+function tidyAbout(){ const m=$('#main'); const pr=m.querySelector('.prose'); if(pr&&!pr.dataset.dd){ pr.dataset.dd='1'; const kids=[...pr.children]; let sec=null; const out=[];
+    kids.forEach(k=>{ if(k.tagName==='H3'){ sec=document.createElement('div'); sec.className='sec'; out.push(sec); k.removeAttribute('style'); sec.appendChild(k); } else if(sec) sec.appendChild(k); else out.push(k); });
+    pr.innerHTML=''; out.forEach(x=>pr.appendChild(x)); pr.querySelectorAll(':scope > .sec').forEach((s,i)=>secToDD(s,{open:i===0})); }
+  m.querySelectorAll('.view .sec').forEach(s=>{ const t=(s.querySelector(':scope > h3')||{}).textContent||''; if(/Sources this week|Recent model changes/.test(t)) secToDD(s,{hint:/Sources/.test(t)?`${(D.sources||[]).length} pages`:'latest 5'}); }); }
+const AFTER={ picks:()=>infoize($('#main')), record:()=>{ infoize($('#main')); tidyRecord(); }, more:()=>infoize($('#main')), about:()=>{ infoize($('#main')); tidyAbout(); }, filter:()=>infoize($('#main')) };
+[['picks','renderPicks'],['record','renderRecord'],['more','renderMore'],['about','renderAbout'],['filter','renderFilter']].forEach(([k,n])=>{ const f={renderPicks,renderRecord,renderMore,renderAbout,renderFilter}[n];
+  const w=function(){ const r=f.apply(this,arguments); try{ if(!(k==='more'&&TOOL)) AFTER[k](); }catch(e){} return r; };
+  if(n==='renderPicks') renderPicks=w; else if(n==='renderRecord') renderRecord=w; else if(n==='renderMore') renderMore=w; else if(n==='renderAbout') renderAbout=w; else renderFilter=w; });
+
+/* slate: the season record in one pill; each game row keeps teams and numbers, details open below */
+function seasonDD(){ const s=seasonStats(); if(!s||!LOG) return '';
+  const P=LOG.picks.filter(p=>p.type==='prop'&&(p.tier||'pick')==='pick'&&p.mk!=='ATD'&&!p.price_est&&(p.result==='win'||p.result==='loss')), w=P.filter(p=>p.result==='win').length, u=P.reduce((a,p)=>a+(p.units||0),0);
+  return `<div class="dd sdd"><button type="button" class="dd-h sdd-h" aria-expanded="false"><span class="dd-t">Season</span><b class="num">${w}–${P.length-w}</b><b class="num ${u>=0?'pos':'neg'}">${sgnU(u)}</b>${CHEV}</button><div class="acc"><div class="acc-in">${s}</div></div></div>`; }
+function gameCard(g){ const started=Date.now()>=kick(g); const st=started?'<span class="status live">Started</span>':g.props_live?'<span class="status on">Lines up</span>':'<span class="status">Lines soon</span>';
+  const hasPick=!started&&gamePicks(g).length>0;
+  const row=(t,k)=>`<div class="ev-row" data-t="${k}">${chip(t)}<span class="tname">${esc(TEAMN[t]||t)}</span><span class="ev-c"><b class="num skel" data-s="${k}">00</b></span><span class="ev-c" data-cw="${k}"><b class="num" data-pw="${k}">–</b></span><span class="ev-c" data-cs="${k}"><b class="num" data-ps="${k}">–</b></span></div>`;
+  return `<div class="gwrap" data-gw="${g.id}" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}"><div class="game ev" role="button" tabindex="0" data-g="${g.id}" style="--i:${GI++}" aria-label="${esc(TEAMN[g.away]||g.away)} at ${esc(TEAMN[g.home]||g.home)}: open game">
+   <div class="ev-head"><span class="ev-when num">${dayShort(g)} ${fmtTime(g.time)}</span>${st}<span class="ev-lbl">Proj</span><span class="ev-lbl">Win</span><span class="ev-lbl">Spread</span></div>
+   ${row(g.away,'a')}${row(g.home,'h')}
+   <button type="button" class="ev-more" aria-expanded="false"><span>${hasPick?'Lines and top pick':'DraftKings lines'}</span>${CHEV}</button>
+   <div class="ev-det"><div class="ev-detin"><div class="ev-foot"><div class="wp" aria-hidden="true"><i data-w="a" style="width:50%;--tc:${TEAMC[g.away]}"></i><i data-w="h" style="width:50%;--tc:${TEAMC[g.home]}"></i></div><span class="mkt num" data-m></span></div>
+   <div class="gpick" data-tp hidden></div></div></div></div><div class="gacc"><div class="gbody"><div class="gpad"></div></div></div></div>`; }
+function toggleDet(card){ const o=!card.classList.contains('det'), b=card.querySelector('.ev-more'); b.setAttribute('aria-expanded',o); card.classList.toggle('det',o);
+  if(o&&!RM()){ const tp=card.querySelector('.gpick:not([hidden])'); if(tp) tp.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:420,delay:90,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}); } }
+function bindRows(){ $('#main').querySelectorAll('.game.ev').forEach(c=>{ if(c._b) return; c._b=1;
+  c.addEventListener('click',e=>{ if(e.target.closest('.ev-more')){ e.stopPropagation(); toggleDet(c); return; } toggleGame(c.parentElement); });
+  c.addEventListener('keydown',e=>{ if(e.target===c&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); toggleGame(c.parentElement); } }); }); }
+
+/* game Overview: three picks up front, the rest on request; game info and what-ifs fold away; spread and total in the hero */
+function stageTidy(pg){ const hero=pg.querySelector('.gpad > .ghero'), ov=pg.querySelector('[data-panel="overview"]'); if(!ov) return;
+  const mr=hero&&hero.querySelector(':scope > .mrow'); if(mr){ const d=document.createElement('div'); d.className='dd hdd'; d.innerHTML=`<button type="button" class="dd-h" aria-expanded="false"><span class="dd-t">Spread and total</span>${CHEV}</button><div class="acc"><div class="acc-in"></div></div>`; mr.before(d); d.querySelector('.acc-in').appendChild(mr); }
+  const tp=ov.querySelector('.tpicks'); if(tp&&tp.children.length>3){ tp.classList.add('clip'); const n=tp.children.length-3; const b=document.createElement('button'); b.type='button'; b.className='btn ghost press tp-more'; b.setAttribute('aria-expanded','false'); b.textContent=`Show ${n} more`; tp.after(b);
+    b.addEventListener('click',()=>{ const show=tp.classList.contains('clip'); tp.classList.toggle('clip',!show); b.setAttribute('aria-expanded',show); b.textContent=show?'Show fewer':`Show ${n} more`;
+      if(show&&!RM()) [...tp.children].slice(3).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(-10px) scale(.98)'},{opacity:1,transform:'none'}],{duration:440,delay:i*45,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'})); }); }
+  const stad=[...ov.children].find(x=>x.tagName==='P'), news=[...ov.querySelectorAll(':scope > .sec')].find(s=>/^News/.test((s.querySelector('h3')||{}).textContent||'')), what=[...ov.querySelectorAll(':scope > .sec')].find(s=>/^What if/.test((s.querySelector('h3')||{}).textContent||''));
+  if(stad||news){ const s=document.createElement('div'); s.className='sec'; s.innerHTML='<h3>Game info</h3>'; const hint=stad?(stad.textContent.split(' · ').slice(1).join(' · ')||''):'';
+    if(stad){ stad.removeAttribute('style'); stad.className='sm muted gi-wx'; s.appendChild(stad); } if(news){ const nb=news.querySelector('.note'); if(nb) s.appendChild(nb); news.remove(); }
+    ov.appendChild(s); secToDD(s,{hint}); }
+  if(what){ ov.appendChild(what); secToDD(what,{hint:'switch the quarterback'}); } }
+function foldSecs(el){ el.querySelectorAll('.pc2 .sec').forEach(s=>{ if(s.classList.contains('dd')) return; const t=((s.querySelector(':scope > h3')||{}).textContent||'').split(' · ')[0].trim(); secToDD(s,{open:PC_OPEN.has(t)}); }); }
 
 /* theme: v7 — the new theme spreads in a circle from the switch while the old one sinks back */
 function initTheme(){ const b=$('#themeBtn'); b.addEventListener('click',()=>{ const html=document.documentElement; const cur=html.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'); const nx=cur==='dark'?'light':'dark';
