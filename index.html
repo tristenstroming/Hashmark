@@ -1766,6 +1766,19 @@ html:not(.kbd) .plc:focus-visible{outline:none}
   main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
   #toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 }
+/* v12.6: a card's press settles quickly (it used to ease in over .4s, so a quick tap opened the game mid-shrink); letting go
+   without opening still eases back over .4s */
+.ft:active,.game:active{transition-duration:.12s}
+/* v12.6: the card copy keeps the light streak's angle from the moment of the tap */
+.stg-ghost::after{transform:var(--gbt,none)}
+/* v12.6: the top bar gets out of the way quickly as a game opens (its title used to sit over the slate's season line rising under it) */
+html.stg-on .top{transition:transform .62s var(--exp),opacity .2s ease-out}
+/* v12.6: a card opened with the mouse over it: its copy keeps the hover look (it used to drop it on the first frame) */
+@media (hover:hover){ .stg-ghost.hov .ft-go{background:#fff;color:#120e26} .stg-ghost.hov .ft-go svg{transform:translateX(3px)}
+  .stg-ghost.hov.game{box-shadow:var(--shadow-lg);border-color:var(--line-2)} .stg-ghost.hov.game.ev{box-shadow:inset 0 1px 0 var(--hl),var(--shadow-lg)} .stg-ghost.hov.game.ev .ev-c{transform:translateY(-1px)} }
+/* v12.7 (Nov 24): zooming out, the board comes back on the zoom's own clock (.44 s, same curve), so the card under the closing
+   copy is at full size when it is revealed */
+html.stg-closing main,html.stg-closing .top{transition:transform .4s cubic-bezier(.32,.72,0,1),opacity .4s cubic-bezier(.32,.72,0,1)!important}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} html.stg-on main{filter:none} }
 </style>
 
@@ -1804,6 +1817,7 @@ html:not(.kbd) .plc:focus-visible{outline:none}
 <div class="scrim" id="scrim" hidden></div>
 <div id="sheets"></div>
 <div id="toast" role="status" aria-live="polite"></div>
+
 
 <script>
 /* Hashmark game simulator.
@@ -1917,6 +1931,7 @@ var HMSim = (function () {
   return { lruMap: lruMap, simulate: simulate, pAtLeast: pAtLeast, pOver: pOver, pOverJ: pOverJ, mean: mean, median: median, sum2: sum2, NA: NA };
 })();
 if (typeof module !== 'undefined') module.exports = HMSim;
+
 </script>
 <script>
 (function(){
@@ -2329,9 +2344,11 @@ function toggleGameInline(w){ if(w.dataset.busy) return; const open=!w.classList
        built so the first frames aren't lost to layout. */
     if(!RM()){ const H=acc.offsetHeight+10, V=Math.min(H,Math.max(360,innerHeight*0.85)), below=belowOf(btn,acc);
       acc.style.clipPath=`inset(0 0 ${H}px 0)`; below.forEach(e=>e.style.transform=`translateY(${-H}px)`);
-      raf2(()=>{ const o={duration:620,easing:'cubic-bezier(.25,1,.5,1)'}; acc.style.clipPath=''; below.forEach(e=>e.style.transform='');
+      raf2(()=>{ const o={duration:620,easing:'cubic-bezier(.25,1,.5,1)'}; below.forEach(e=>e.style.transform='');
         below.forEach(e=>e.animate([{transform:`translateY(${-H}px)`},{transform:'translateY(0)'}],o));
-        acc.animate([{clipPath:`inset(0 0 ${H}px 0)`},{clipPath:`inset(0 0 ${Math.max(0,H-V)}px 0)`}],o);
+        /* v12.6: the clip stays as a style until the reveal has run (see the stage zoom: an off-thread clip animation could
+           miss its first frame and show the whole panel for a frame) */
+        const ca=acc.animate([{clipPath:`inset(0 0 ${H}px 0)`},{clipPath:`inset(0 0 ${Math.max(0,H-V)}px 0)`}],{...o,fill:'forwards'}); ca.onfinish=()=>{ acc.style.clipPath=''; ca.cancel(); };
         const pad=acc.querySelector('.gpad'); let i=0;
         if(pad) [...pad.children].forEach(c=>{ const top=c.offsetTop; if(top>V||i>9) return;
           c.animate([{opacity:0,transform:'translateY(-14px)'},{opacity:1,transform:'none'}],{duration:480,delay:70+i++*55,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}); });
@@ -3470,8 +3487,13 @@ function drawStageBar(d){ const {el,i,gs}=STG, g=gs[i], bar=el.querySelector('.s
    so a slow build never eats the first part of the animation. Closing runs the same path back into the card. */
 const STG_T=560, STG_C=440, STG_CE='cubic-bezier(.32,.72,0,1)', STG_R=18;
 const clipOf=(S,W,H,r)=>`inset(${Math.max(0,S.top).toFixed(1)}px ${Math.max(0,W-S.right).toFixed(1)}px ${Math.max(0,H-S.bottom).toFixed(1)}px ${Math.max(0,S.left).toFixed(1)}px round ${r}px)`;
-function stageGhost(el,src,S){ const gh=src.cloneNode(true); gh.removeAttribute('id'); gh.classList.remove('lifted'); gh.classList.add('stg-ghost'); gh.setAttribute('aria-hidden','true'); gh.removeAttribute('tabindex');
+function stageGhost(el,src,S){ const gh=src.cloneNode(true); gh.removeAttribute('id'); gh.classList.remove('lifted'); gh.removeAttribute('data-held'); gh.style.transform=''; gh.style.transition=''; gh.classList.add('stg-ghost'); gh.setAttribute('aria-hidden','true'); gh.removeAttribute('tabindex');
   const w=src.closest('.gwrap'); if(w){ gh.style.setProperty('--ta',w.style.getPropertyValue('--ta')); gh.style.setProperty('--th',w.style.getPropertyValue('--th')); }
+  /* v12.6: the card's light streak sways; the copy (whose animations are off) keeps the angle it had, instead of snapping straight */
+  try{ const bt=getComputedStyle(src,'::after').transform; if(bt&&bt!=='none') gh.style.setProperty('--gbt',bt); }catch(e){}
+  /* and the Open game button exactly as drawn (its hover colours, or partway through changing) */
+  try{ const a=src.querySelector('.ft-go'), b=gh.querySelector('.ft-go'); if(a&&b){ const cs=getComputedStyle(a); b.style.backgroundColor=cs.backgroundColor; b.style.color=cs.color;
+    const as=a.querySelector('svg'), bs=b.querySelector('svg'); if(as&&bs) bs.style.transform=getComputedStyle(as).transform; } }catch(e){}
   const box=document.createElement('div'); box.className='stg-ghostbox view sl8'+(src.closest('.view.ov')?' ov':''); box.setAttribute('aria-hidden','true'); box.appendChild(gh);
   Object.assign(gh.style,{position:'absolute',left:S.left+'px',top:S.top+'px',width:S.width+'px',height:S.height+'px',margin:'0',transformOrigin:'0 0'}); el.appendChild(box); return gh; }
 /* ===== v12.3 (Nov 23): the slate card turns into the game header and back. The parts they share (status badge, team chips
@@ -3482,9 +3504,9 @@ function morphPairs(src,hero,g){ const q=(r,x)=>r?r.querySelector(x):null, qa=(r
   const tm=qa(hero,'.mh > .tm'), pts=qa(hero,'.mh .pts'), P=[];
   const B={ca:q(tm[0],'.crest'),ch:q(tm[1],'.crest'),na:q(tm[0],'.tn'),nh:q(tm[1],'.tn'),pa:pts[0],ph:pts[1],lb:q(hero,'.mh .mid b'),bd:q(hero,'.gres .gs-badge'),wp:q(hero,'.wpbig .wp')};
   if(src.classList.contains('ft')){ const t=qa(src,'.ft-team'), n=qa(src,'.ft-s b');
-    P.push([q(t[0],'.tchip'),B.ca,'t'],[q(t[1],'.tchip'),B.ch,'t'],[q(t[0],'b'),B.na,'t'],[q(t[1],'b'),B.nh,'t'],[n[0],B.pa,'t'],[n[1],B.ph,'t'],[q(src,'.ft-pj'),B.lb,'t'],[q(src,'.ft-top .gs-badge'),B.bd,'t'],[q(src,'.ft-bar'),B.wp,'b']); }
+    P.push([q(t[0],'.tchip'),B.ca,'b'],[q(t[1],'.tchip'),B.ch,'b'],[q(t[0],'b'),B.na,'t'],[q(t[1],'b'),B.nh,'t'],[n[0],B.pa,'t'],[n[1],B.ph,'t'],[q(src,'.ft-pj'),B.lb,'t'],[q(src,'.ft-top .gs-badge'),B.bd,'t'],[q(src,'.ft-bar'),B.wp,'b']); }
   else if(src.classList.contains('game')){ const r=qa(src,'.ev-row');
-    P.push([q(r[0],'.tchip'),B.ca,'t'],[q(r[1],'.tchip'),B.ch,'t'],[q(r[0],'.tname'),B.na,'t'],[q(r[1],'.tname'),B.nh,'t']);
+    P.push([q(r[0],'.tchip'),B.ca,'b'],[q(r[1],'.tchip'),B.ch,'b'],[q(r[0],'.tname'),B.na,'t'],[q(r[1],'.tname'),B.nh,'t']);
     if(!scoreOf(g)) P.push([q(r[0],'[data-s]'),B.pa,'t'],[q(r[1],'[data-s]'),B.ph,'t']); }
   return P.filter(([a,b])=>a&&b).map(([a,b,m])=>({a,b,m,ra:a.getBoundingClientRect(),rb:b.getBoundingClientRect()})).filter(x=>x.ra.width&&x.rb.width&&x.ra.height&&x.rb.height); }
 /* a copy of one part, inside bare copies of its ancestors (so the part keeps its styles), placed at rectangle R */
@@ -3494,48 +3516,83 @@ function flyCopy(box,el,root,R){ const chain=[]; for(let x=el.parentElement;x;x=
 const flyMap=(X,Y,m)=>m==='b'?`translate(${(Y.left-X.left).toFixed(1)}px,${(Y.top-X.top).toFixed(1)}px) scale(${(Y.width/X.width).toFixed(4)},${(Y.height/X.height).toFixed(4)})`
   :`translate(${(Y.left+Y.width/2-X.left-X.width/2).toFixed(1)}px,${(Y.top+Y.height/2-X.top-X.height/2).toFixed(1)}px) scale(${(Y.height/X.height).toFixed(4)})`;
 function heroRest(hero,MP){ const pb=MP.map(p=>p.b); return [...hero.querySelectorAll('.gres > *, .mh .mid > span:first-child, .mh .mid b, .mh .pts, .mh .tm > *, .wpbig > *, :scope > .hdd, :scope > .mrow')].filter(x=>!pb.some(b=>b===x||b.contains(x)||x.contains(b))); }
-function morph(el,MP,src,hero,open,T,E){ if(!MP.length) return {run(){},end(){}}; const box=document.createElement('div'); box.className='stg-ghostbox stg-flybox view sl8'; box.setAttribute('aria-hidden','true'); el.appendChild(box);
+function morph(el,MP,src,hero,open,T,E){ if(!MP.length) return {run(){},end(){},box:null}; const box=document.createElement('div'); box.className='stg-ghostbox stg-flybox view sl8'; box.setAttribute('aria-hidden','true'); el.appendChild(box);
   const it=MP.map(p=>({p,A:flyCopy(box,p.a,src,p.ra),B:flyCopy(box,p.b,hero,p.rb)})); MP.forEach(p=>{ p.vb=p.b.style.visibility; p.b.style.visibility='hidden'; });
   /* until run() starts the motion (two frames later on open), only the copies at the starting end are visible */
   it.forEach(({A,B})=>{ (open?B:A).style.opacity='0'; });
   const rest=heroRest(hero,MP);
   return { run(){ it.forEach(({p,A,B})=>{ if(p.m==='b'){ A.style.transformOrigin='0 0'; B.style.transformOrigin='0 0'; } const tA=flyMap(p.ra,p.rb,p.m), tB=flyMap(p.rb,p.ra,p.m), o={duration:T,easing:E,fill:'forwards'};
-      if(open){ A.animate([{transform:'none',opacity:1},{opacity:0,offset:.5},{transform:tA,opacity:0}],o); B.animate([{transform:tB,opacity:0},{opacity:1,offset:.5},{transform:'none',opacity:1}],o); }
+      if(open){ /* v12.6: motion on the zoom's curve, the hand-over on the clock (keyframe offsets ride the eased progress, and the
+           zoom's fast start used to finish the whole cross-fade in the first ~70 ms: a doubled-text flash right at the tap) */
+        const f={duration:T,easing:'linear',fill:'forwards'};
+        A.animate([{transform:'none'},{transform:tA}],o); B.animate([{transform:tB},{transform:'none'}],o);
+        A.animate([{opacity:1},{opacity:1,offset:.04,easing:'ease-in-out'},{opacity:0,offset:.2},{opacity:0}],f);
+        B.animate([{opacity:0},{opacity:0,offset:.1,easing:'ease-in-out'},{opacity:1,offset:.28},{opacity:1}],f); }
       else { B.animate([{transform:'none',opacity:1},{opacity:1,offset:.35},{opacity:0,offset:.75},{transform:tB,opacity:0}],o); A.animate([{transform:tA,opacity:0},{opacity:0,offset:.35},{opacity:1,offset:.75},{transform:'none',opacity:1}],o); } });
-      rest.forEach(x=>open?x.animate([{opacity:0},{opacity:1}],{duration:T*.36,delay:T*.3,easing:'ease-out',fill:'backwards'}):x.animate([{opacity:1},{opacity:0}],{duration:T*.3,easing:'ease-in',fill:'forwards'})); },
-    end(){ box.remove(); MP.forEach(p=>{ p.b.style.visibility=p.vb||''; }); } }; }
+      rest.forEach(x=>open?x.animate([{opacity:0},{opacity:1}],{duration:T*.36,delay:T*(src.classList.contains('ft')?.6:.3),easing:'ease-out',fill:'backwards'}):x.animate([{opacity:1},{opacity:0}],{duration:T*.3,easing:'ease-in',fill:'forwards'})); },
+    end(){ box.remove(); MP.forEach(p=>{ p.b.style.visibility=p.vb||''; }); }, box }; }
 /* the card copy that fades during the zoom leaves out the parts that travel on their own */
 function markParts(MP,on){ MP.forEach((p,i)=>{ if(on) p.a.setAttribute('data-mp',i); else p.a.removeAttribute('data-mp'); }); }
 /* where a rectangle inside the page would land on the card: transform for the page (origin 0 0) */
 function mapTo(S,A,pgTop){ const k=Math.max(.3,Math.min(1.6,S.width/Math.max(1,A.width))); return {k,t:`translate(${(S.left-k*A.left).toFixed(2)}px,${(S.top-pgTop-k*(A.top-pgTop)).toFixed(2)}px) scale(${k.toFixed(4)})`}; }
+/* v12.6: the press a card is under right now (:active scale, desktop hover lift), as a map from its real layout box L to
+   where it is drawn (S). null when it isn't transformed, or is transformed in a way this doesn't cover */
+function pressOf(src,S){ try{ const cs=getComputedStyle(src); let M=new DOMMatrix();
+    if(cs.scale&&cs.scale!=='none'){ const v=cs.scale.split(' ').map(parseFloat); if(v.every(isFinite)) M=M.scale(v[0],v.length>1?v[1]:v[0]); }
+    if(cs.transform&&cs.transform!=='none') M=M.multiply(new DOMMatrix(cs.transform));
+    if(Math.abs(M.b)>1e-4||Math.abs(M.c)>1e-4||M.a<=0||M.d<=0) return null;
+    if(Math.abs(M.a-1)<1e-4&&Math.abs(M.d-1)<1e-4&&Math.abs(M.e)<.05&&Math.abs(M.f)<.05) return null;
+    const o=cs.transformOrigin.split(' ').map(parseFloat), a=M.a, d=M.d, L={left:S.left-(o[0]||0)*(1-a)-M.e,top:S.top-(o[1]||0)*(1-d)-M.f,width:S.width/a,height:S.height/d};
+    L.right=L.left+L.width; L.bottom=L.top+L.height;
+    /* transform (origin 0 0) for a full-screen box whose own top-left is at B, drawing L where S is */
+    return {a,d,L,at:B=>`translate(${(S.left-a*L.left-(1-a)*B.left).toFixed(2)}px,${(S.top-d*L.top-(1-d)*B.top).toFixed(2)}px) scale(${a.toFixed(5)},${d.toFixed(5)})`,
+      toL:R=>({left:L.left+(R.left-S.left)/a,top:L.top+(R.top-S.top)/d,width:R.width/a,height:R.height/d})}; }catch(e){ return null; } }
+/* while the page grows over it, the card stays at the size it was pressed to (springing back, its rim showed past the growing page) */
+function pressHold(el,on){ if(on){ const t=getComputedStyle(el).transform; el.style.transition='none'; el.style.transform=t; el.dataset.held='1'; }
+  else if(el.dataset.held){ delete el.dataset.held; el.style.transform=''; void el.offsetWidth; el.style.transition=''; } }
 function openStage(gid,src){ if(STG||!D) return; const gs=stageOrder(), i=gs.findIndex(x=>x.id===gid); if(i<0) return; closePlayer(true); tip(null);
-  const html=document.documentElement, W=innerWidth, H=innerHeight, S=src&&src.isConnected?src.getBoundingClientRect():null, anim=!RM()&&S&&S.width>0&&S.bottom>0&&S.top<H;
+  const html=document.documentElement, W=html.clientWidth||innerWidth, H=html.clientHeight||innerHeight, S=src&&src.isConnected?src.getBoundingClientRect():null, anim=!RM()&&S&&S.width>0&&S.bottom>0&&S.top<H;
+  /* v12.6: a finger tap leaves the card pressed (scaled down a little) when the click arrives. The card copy and the travelling
+     parts are laid out at the card's real size and start under that same press, which eases off as they grow, so the first
+     frame is exactly what was under the finger */
+  const PR=anim?pressOf(src,S):null, L=PR?PR.L:S, HOV=anim&&src.matches(':hover'); if(PR) pressHold(src,true); const R0=anim?(parseFloat(getComputedStyle(src).borderTopLeftRadius)||STG_R)*(PR?PR.a:1):STG_R;
   const el=document.createElement('div'); el.className='stg'+(anim?' pre':''); el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true');
   el.innerHTML='<div class="stg-bar"></div><div class="stg-track"><div class="stg-mini" aria-hidden="true"></div><div class="stg-edge l" aria-hidden="true">'+SVG_L+'</div><div class="stg-edge r" aria-hidden="true">'+SVG_R+'</div></div>';
-  html.style.setProperty('--sy',scrollY+'px'); if(anim) el.style.clipPath=clipOf(S,W,H,STG_R);
+  html.style.setProperty('--sy',scrollY+'px'); if(anim) el.style.clipPath=clipOf(S,W,H,R0);
   const pg=takePre(gs[i])||stagePage(gs[i]); el.querySelector('.stg-track').appendChild(pg); document.body.appendChild(el); stInd(pg,true);
   STG={el,i,gs,pg,src,gid0:gid,busy:anim?1:0}; drawStageBar(0); bindStage(el); stageScroll(pg); stageMini(gs[i]);
   document.body.style.overflow='hidden'; el.querySelector('.stg-x').focus({preventScroll:true});
-  const fin=()=>{ if(STG&&STG.el===el&&!STG.closing){ html.classList.add('stg-full'); boardHidden(true); } };
+  const fin=()=>{ if(STG&&STG.el===el&&!STG.closing){ if(src&&src.isConnected){ src.classList.add('lifted'); pressHold(src,false); } html.classList.add('stg-full'); boardHidden(true); } };
   if(!anim){ html.classList.add('stg-on'); grow(pg); fin(); return; }
   /* first frame: the stage is only the card's rectangle, the hero sits exactly on the card, and a copy of the card covers it */
   const pgTop=el.querySelector('.stg-track').getBoundingClientRect().top, hero=pg.querySelector('.gpad > .ghero');
   const hr=hero&&hero.getBoundingClientRect(), A=hr&&hr.width?{left:hr.left,top:hr.top,width:hr.width,height:hr.height}:{left:0,top:pgTop,width:W};
-  const MP=hero?morphPairs(src,hero,gs[i]):[];
-  const m=mapTo(S,A,pgTop); pg.style.transformOrigin='0 0'; pg.style.transform=m.t;
-  markParts(MP,true); const gh=stageGhost(el,src,S), gT=`translate(${(A.left-S.left).toFixed(2)}px,${(A.top-S.top).toFixed(2)}px) scale(${(1/m.k).toFixed(4)})`; markParts(MP,false);
+  const MP=hero?morphPairs(src,hero,gs[i]):[]; if(PR) MP.forEach(p=>{ p.ra=PR.toL(p.ra); });
+  const m=mapTo(S,A,pgTop), kL=L.width/Math.max(1,A.width); pg.style.transformOrigin='0 0'; pg.style.transform=m.t;
+  markParts(MP,true); const gh=stageGhost(el,src,L); if(HOV) gh.classList.add('hov'); const gT=`translate(${(A.left-L.left).toFixed(2)}px,${(A.top-L.top).toFixed(2)}px) scale(${(1/kL).toFixed(4)})`; markParts(MP,false);
   gh.querySelectorAll('[data-mp]').forEach(x=>x.style.visibility='hidden'); const fly=morph(el,MP,src,hero,true,STG_T,STG_E);
+  const pressBoxes=PR?[gh.parentNode,fly.box].filter(Boolean):[]; pressBoxes.forEach(b=>{ b.style.transformOrigin='0 0'; b._pt=PR.at(b.getBoundingClientRect()); b.style.transform=b._pt; });
   raf2(()=>{ if(!STG||STG.el!==el||STG.closing){ gh.parentNode&&gh.parentNode.remove(); fly.end(); return; } fly.run(); setTimeout(()=>fly.end(),STG_T+30);
-    src.classList.add('lifted'); el.classList.remove('pre'); html.classList.add('stg-on','stg-anim'); setTimeout(()=>html.classList.remove('stg-anim'),STG_T+260);
-    el.style.clipPath=''; el.animate([{clipPath:clipOf(S,W,H,STG_R)},{clipPath:'inset(0px 0px 0px 0px round 0px)'}],{duration:STG_T,easing:STG_E});
+    el.classList.remove('pre'); html.classList.add('stg-on','stg-anim'); setTimeout(()=>html.classList.remove('stg-anim'),STG_T+260);
+    /* v12.6: the card itself stays put under the growing stage (it is covered), so its shadow fades out with the board
+       instead of vanishing on the first frame; it is hidden once the stage fills the screen */
+    pressBoxes.forEach(b=>{ b.style.transform=''; b.animate([{transform:b._pt},{transform:'none'}],{duration:STG_T*.7,easing:STG_E,fill:'backwards'}); });
+    /* v12.6: the stage keeps its card-shaped clip as a style until the zoom has finished (it used to drop it here and rely on the
+       animation; Chrome now runs clip-path animations off the main thread and could show one frame before that animation
+       had started: the whole game page, unclipped, over the board) */
+    const ca=el.animate([{clipPath:clipOf(S,W,H,R0)},{clipPath:'inset(0px 0px 0px 0px round 0px)'}],{duration:STG_T,easing:STG_E,fill:'forwards'});
+    ca.onfinish=()=>{ if(STG&&STG.el===el&&!STG.closing){ el.style.clipPath=''; ca.cancel(); } };
     pg.style.transform=''; pg.animate([{transform:m.t},{transform:'none'}],{duration:STG_T,easing:STG_E}).onfinish=()=>{ pg.style.transformOrigin=''; if(STG&&STG.el===el) STG.busy=0; };
     gh.animate([{transform:'none'},{transform:gT}],{duration:STG_T,easing:STG_E,fill:'forwards'});
     /* v12.5: a slate card's copy keeps its box: its contents fade first, the box narrows to the header's height as it
        grows, then hands over to the header (same colours) as the header's own details come in */
-    if(src.classList.contains('ft')&&A.height){ const gin=gh.querySelector('.ft-in'), r0=parseFloat(getComputedStyle(src).borderTopLeftRadius)||22, r1=(parseFloat(getComputedStyle(hero).borderTopLeftRadius)||26)*m.k, cb=Math.max(0,S.height-A.height*m.k);
+    if(src.classList.contains('ft')&&A.height){ const gin=gh.querySelector('.ft-in'), r0=parseFloat(getComputedStyle(src).borderTopLeftRadius)||22, r1=(parseFloat(getComputedStyle(hero).borderTopLeftRadius)||26)*kL, cb=Math.max(0,L.height-A.height*kL);
       gh.animate([{clipPath:`inset(0px 0px 0px 0px round ${r0}px)`},{clipPath:`inset(0px 0px ${cb.toFixed(1)}px 0px round ${r1.toFixed(1)}px)`}],{duration:STG_T,easing:STG_E,fill:'forwards'});
       if(gin) gin.animate([{opacity:1},{opacity:0}],{duration:STG_T*.3,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'});
-      gh.animate([{opacity:1},{opacity:1,offset:.32},{opacity:0,offset:.66},{opacity:0}],{duration:STG_T,easing:'linear',fill:'forwards'}).onfinish=()=>gh.parentNode&&gh.parentNode.remove(); }
+      /* v12.7 (Tristen): the card must grow into the header as ONE piece, not fade out while the header fades in. The copy stays
+         solid (same colours as the header) while its box becomes the header's; only the card's own contents fade, and the copy
+         hands over to the header in the last part, which only reveals the header's details (spread, total, time) */
+      gh.animate([{opacity:1},{opacity:1,offset:.74},{opacity:0}],{duration:STG_T,easing:'linear',fill:'forwards'}).onfinish=()=>gh.parentNode&&gh.parentNode.remove(); }
     else gh.animate([{opacity:1},{opacity:0}],{duration:STG_T*(m.k<.75?.24:.34),easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).onfinish=()=>gh.parentNode&&gh.parentNode.remove();
     el.querySelector('.stg-bar').animate([{opacity:0,transform:'translateY(-100%)'},{opacity:1,transform:'none'}],{duration:480,delay:110,easing:STG_E,fill:'backwards'});
     waterfall(pg,120); grow(pg); setTimeout(fin,STG_T+40); }); }
@@ -3543,13 +3600,16 @@ function openStage(gid,src){ if(STG||!D) return; const gs=stageOrder(), i=gs.fin
 function boardHidden(on){ document.querySelectorAll('main, .top').forEach(e=>{ if(on) e.setAttribute('aria-hidden','true'); else e.removeAttribute('aria-hidden'); }); }
 document.addEventListener('focusin',e=>{ if(!STG||STG.closing||STG.el.contains(e.target)) return; if(e.target.closest&&e.target.closest('main, .top')){ const x=STG.el.querySelector('.stg-x'); if(x) x.focus({preventScroll:true}); } });
 function closeStage(instant){ if(!STG||STG.closing) return; const {el,gs,i,pg}=STG; STG.closing=1; tip(null); closePlayer(true);
+  document.querySelectorAll('[data-held]').forEach(c=>pressHold(c,false));
   const html=document.documentElement, g=gs[i];
   /* v12: back into the game's big card, unless it was opened from the "All games" list and its row is still showing */
   const row=cardOf(g.id), fromRow=STG.src&&STG.src.classList&&STG.src.classList.contains('game'), rowOk=row&&row.closest('.gdd.open')&&!row.closest('[hidden]');
   const tr=$('#ftTrack'), ft=fromRow&&rowOk?null:document.querySelector(`.ft[data-fg="${g.id}"]`);
   if(ft&&tr&&tr._go){ const j=tr._idx(g.id); if(j!==tr._cur()) tr._go(j,true); }
   boardHidden(false);
-  const done=()=>{ el.remove(); STG=null; schedPre(); html.classList.remove('stg-on','stg-full','stg-snap','stg-anim'); document.body.style.overflow=''; document.querySelectorAll('.game.lifted,.ft.lifted').forEach(c=>c.classList.remove('lifted')); };
+  const done=()=>{ el.remove(); STG=null; schedPre(); html.classList.remove('stg-on','stg-full','stg-snap','stg-anim','stg-closing'); document.body.style.overflow=''; document.querySelectorAll('.game.lifted,.ft.lifted').forEach(c=>{ c.classList.remove('lifted');
+      /* v12.7: the copy was clipped to the card, so the card's own drop shadow eases in instead of appearing at once */
+      if(!RM()){ const bs=getComputedStyle(c).boxShadow; if(bs&&bs!=='none') c.animate([{boxShadow:bs.replace(/rgba?\([^)]*\)/g,'rgba(0,0,0,0)')},{boxShadow:bs}],{duration:300,easing:'ease-out'}); } }); };
   const refocus=c=>{ if(c&&c.isConnected) c.focus({preventScroll:true}); };
   html.classList.remove('stg-full');
   if(instant||RM()){ done(); if(!instant) refocus(ft||cardOf(g.id)); return; }
@@ -3560,8 +3620,8 @@ function closeStage(instant){ if(!STG||STG.closing) return; const {el,gs,i,pg}=S
   /* v12.5: the card's parts are measured here, with the board at full size (measuring after the board had gone back to its
      94% zoomed-out state landed every travelling copy ~5 px off, and the card jumped when it was revealed) */
   const hero0=pg.querySelector('.gpad > .ghero'), MP=S&&hero0&&pg.scrollTop<=8?morphPairs(src,hero0,g):[];
-  html.style.setProperty('--sy',scrollY+'px'); html.classList.add('stg-on','stg-anim'); void html.offsetWidth; html.classList.remove('stg-snap'); requestAnimationFrame(()=>html.classList.remove('stg-on')); setTimeout(()=>html.classList.remove('stg-anim'),STG_C+200);
-  const W=innerWidth, H=innerHeight;
+  html.style.setProperty('--sy',scrollY+'px'); html.classList.add('stg-on','stg-anim','stg-closing'); void html.offsetWidth; html.classList.remove('stg-snap'); requestAnimationFrame(()=>html.classList.remove('stg-on')); setTimeout(()=>html.classList.remove('stg-anim'),STG_C+200);
+  const W=html.clientWidth||innerWidth, H=html.clientHeight||innerHeight;   /* v12.7: the stage's own box (html.scrollbar-gutter keeps a gutter that innerWidth counts), so the clip lands on the card's right edge */
   el.querySelector('.stg-bar').animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-60%)'}],{duration:260,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
   const mini=el.querySelector('.stg-mini'); if(mini) mini.style.opacity='0';
   if(!S){ el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.96)'}],{duration:300,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).onfinish=()=>{ done(); refocus(src); }; return; }
@@ -3576,14 +3636,15 @@ function closeStage(instant){ if(!STG||STG.closing) return; const {el,gs,i,pg}=S
   let A={left:0,top:pgTop,width:W}; if(hero&&sc<=8){ hero.style.transform=''; hero.style.opacity=''; const hr=hero.getBoundingClientRect(); if(hr.width) A={left:hr.left,top:hr.top,width:hr.width,height:hr.height}; }
   const m=mapTo(S,A,pgTop);
   pg.animate([{transform:cur},{transform:m.t}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
-  const a=el.animate([{clipPath:'inset(0px 0px 0px 0px round 0px)'},{clipPath:clipOf(S,W,H,STG_R)}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
+  const a=el.animate([{clipPath:'inset(0px 0px 0px 0px round 0px)'},{clipPath:clipOf(S,W,H,parseFloat(getComputedStyle(src).borderTopLeftRadius)||STG_R)}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
   const G0=hNow&&hNow.width?hNow:A, gT=`translate(${(G0.left-S.left).toFixed(2)}px,${(G0.top-S.top).toFixed(2)}px) scale(${(G0.width/S.width).toFixed(4)})`;
-  markParts(MP,true); const gh=stageGhost(el,src,S); markParts(MP,false);
+  markParts(MP,true); const gh=stageGhost(el,src,S); markParts(MP,false); gh.style.transform=gT; gh.style.opacity='0';
   gh.querySelectorAll('[data-mp]').forEach(x=>x.style.visibility='hidden'); morph(el,MP,src,hero,false,STG_C,STG_CE).run();
   gh.animate([{transform:gT},{transform:'none'}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
   /* v12.5: a slate card's copy takes over from the header early (solid, same colours), its box growing from the header's
      height to the card's, so the page's tabs never show through; the card's contents come back in the second half */
   if(src.classList.contains('ft')&&MP.length&&A.height){ const gin=gh.querySelector('.ft-in'), r0=parseFloat(getComputedStyle(src).borderTopLeftRadius)||22, r1=(parseFloat(getComputedStyle(hero).borderTopLeftRadius)||26)*m.k, cb=Math.max(0,S.height-A.height*m.k);
+    gh.style.clipPath=`inset(0px 0px ${cb.toFixed(1)}px 0px round ${r1.toFixed(1)}px)`;
     gh.animate([{clipPath:`inset(0px 0px ${cb.toFixed(1)}px 0px round ${r1.toFixed(1)}px)`},{clipPath:`inset(0px 0px 0px 0px round ${r0}px)`}],{duration:STG_C,easing:STG_CE,fill:'forwards'});
     gh.animate([{opacity:0},{opacity:1,offset:.25},{opacity:1}],{duration:STG_C,easing:'linear',fill:'forwards'});
     if(gin) gin.animate([{opacity:0},{opacity:0,offset:.45},{opacity:1}],{duration:STG_C,easing:'linear',fill:'forwards'});
@@ -3978,6 +4039,7 @@ Promise.all([fetch('data/week.json',{cache:'no-store'}).then(r=>r.json()),fetch(
  .then(([w,l])=>{ D=w; LOG=l; CAL=w.calibration||CAL; if(document.fonts&&document.fonts.ready) document.fonts.ready.then(movePill); boot(); })
  .catch(e=>{ $('#main').innerHTML=`<div class="empty">Couldn't load this week's data (${esc(e.message)}). Reload the page to try again.</div>`; });
 })();
+
 
 </script>
 
