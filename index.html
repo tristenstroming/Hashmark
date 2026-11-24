@@ -1829,6 +1829,11 @@ html.stg-closing main,html.stg-closing .top{transition:transform .4s cubic-bezie
 .ptabs.dragging,.stg-tabs.dragging,.sl-pills.dragging{cursor:grabbing;user-select:none;-webkit-user-select:none;scroll-behavior:auto}
 .ptabs.dragging button,.stg-tabs.dragging button,.sl-pills.dragging button{pointer-events:none}
 .games-hist.td .bar:not(.hit){background:var(--band-2);opacity:.7}
+/* v12.9h (Nov 24, Tristen): no title block on the slate; the Season record pill leads the page (heading kept for screen readers) */
+.vh{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.sl-top{justify-content:center;margin-bottom:26px}
+@media (min-width:561px){ .sl-top .sdd-h{display:flex;width:fit-content;margin-inline:auto} .sl-top .kstats{justify-content:center} }
+@media (max-width:560px){ .sl-top{margin-bottom:22px} }
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} html.stg-on main{filter:none} }
 </style>
 
@@ -3973,7 +3978,7 @@ function renderSlate(){ const gs=D.games.slice().sort((a,b)=>kick(a)-kick(b)); c
   if(SLF!=='all'&&!slots.some(s=>s.key===SLF)) SLF='all';
   const nLines=D.games.filter(g=>g.props_live).length; GI=0; const fs=featuredGames(gs);
   $('#main').innerHTML=`<section class="view sl8${OV?' ov':''}">
-    <div class="sl-top"><div class="sl-title"><span class="eyebrow num">NFL ${esc(D.season)} · Week ${esc(D.week)} · ${N.toLocaleString()} sims a game</span><h1>This week's <em>board</em></h1></div>${seasonDD()}</div>
+    <h1 class="vh">NFL ${esc(D.season)} week ${esc(D.week)} board</h1>${(()=>{ const sd=seasonDD(); return sd?`<div class="sl-top">${sd}</div>`:''; })()}
     ${featHTML(fs)}
     <div class="dd gdd${GDD?' open settled':''}" id="gdd"><button type="button" class="dd-h gdd-h" aria-expanded="${GDD}"><span class="gdd-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span class="dd-t">All games</span><span class="dd-hint"><span class="num">${gs.length} games</span><span class="gdd-more"> · kickoffs, lines and win odds</span></span>${CHEV}</button><div class="acc"><div class="acc-in">
     <div class="sl-bar"><div class="sl-pills" id="slPills" role="tablist" aria-label="Kickoff windows"><i class="sl-ind" aria-hidden="true"></i><button type="button" role="tab" data-sf="all" aria-selected="${SLF==='all'}">All games</button>${slots.map(s=>`<button type="button" role="tab" data-sf="${s.key}" aria-selected="${SLF===s.key}">${esc(slotLbl(s.name))}<span class="num">${s.games.length}</span></button>`).join('')}</div>
