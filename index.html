@@ -1779,6 +1779,56 @@ html.stg-on .top{transition:transform .62s var(--exp),opacity .2s ease-out}
 /* v12.7 (Nov 24): zooming out, the board comes back on the zoom's own clock (.44 s, same curve), so the card under the closing
    copy is at full size when it is revealed */
 html.stg-closing main,html.stg-closing .top{transition:transform .4s cubic-bezier(.32,.72,0,1),opacity .4s cubic-bezier(.32,.72,0,1)!important}
+/* v12.9b (Nov 24, Tristen: "less clunky, more minimalistic"): game Overview as quiet lists on hairlines, no boxes */
+.ov2 > h3{display:flex;align-items:baseline;gap:8px}
+.ov2-n{font:600 12px/1 var(--disp);letter-spacing:.04em;color:var(--faint);text-transform:none}
+.ov2-empty{margin:0 2px;font-size:14px;color:var(--muted)}
+.ov2-list{border-top:1px solid var(--line)}
+.ov2-pk{display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:12px;width:100%;padding:11px 2px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;color:var(--ink);font-size:14px;cursor:pointer}
+.ov2-t{display:flex;align-items:center;gap:8px;min-width:0}
+.ov2-t .side{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov2-p{font:700 16px/1 var(--disp)}
+.ov2-e{font-size:12px;color:var(--muted);text-align:right}
+.ov2-r{flex:0 0 auto;font:700 10px/1 var(--disp);letter-spacing:.06em;text-transform:uppercase;font-style:normal;color:var(--muted)}
+.ov2-r.w{color:var(--good)} .ov2-r.l{color:var(--bad)}
+@media (hover:hover){ .ov2-pk:hover{background:color-mix(in srgb,var(--panel-2) 55%,transparent)} }
+.ov2-foot{margin:8px 2px 0;font-size:11.5px;color:var(--faint)}
+.ov2-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ov2-c{display:flex;flex-direction:column;gap:3px;padding:12px 2px;min-width:0}
+.ov2-c + .ov2-c{padding-left:14px;border-left:1px solid var(--line)}
+.ov2-k{font:600 10.5px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.ov2-c b{font:650 16px/1.25 var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov2-s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){ .ov2-grid{grid-template-columns:1fr 1fr} .ov2-c:nth-child(3){padding-left:2px;border-left:0} .ov2-c:nth-child(n+3){border-top:1px solid var(--line)} }
+.ov2-qbs{display:flex;flex-wrap:wrap;gap:10px 22px;padding:2px 2px 0}
+.ov2-qb{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+.ov2-q{font:700 10px/1 var(--disp);font-style:normal;padding:3px 5px;border-radius:5px;background:color-mix(in srgb,#d97706 16%,transparent);color:#b45309}
+.ov2-note{margin:8px 2px 0;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.ov2-note b{color:var(--ink-2);font-weight:650;margin-right:2px}
+.ov2-ir{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;padding:10px 2px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.5}
+.ov2-ir:last-child{border-bottom:1px solid var(--line)}
+.ov2-ig{display:block}
+.ov2-ig small{color:var(--faint);font-size:11px}
+.ov2-st{font:700 10px/1 var(--disp);font-style:normal;letter-spacing:.06em;text-transform:uppercase;margin-right:8px}
+.ov2-st.o{color:var(--bad)} .ov2-st.q{color:#b45309}
+.ov2-none{color:var(--faint)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .ov2-q,:root:not([data-theme="light"]) .ov2-st.q{color:#fbbf24} }
+:root[data-theme="dark"] .ov2-q,:root[data-theme="dark"] .ov2-st.q{color:#fbbf24}
+/* v12.9c (Nov 24, Tristen): cards off to the side keep their contents in place; the sideways parallax on .ft-in (up to 46px)
+   pushed a neighbour's text off its left edge */
+.ft-in{transform:none}
+/* v12.9f: the away side uses --ta2 = the away team's primary, or its secondary when the two primaries clash (app.js awayC).
+   v12.9d (Nov 24, Tristen): cards are the two teams' own colours - away colour on the away (top-left) side, home colour on the
+   home (bottom-right) side - nearly true to the team colour instead of mixed heavily with near-black; a light shade on top keeps
+   white text readable on bright colours (PIT gold, NO, LAC powder blue). The split still leans toward the favourite (30-70%). */
+.ft,.card.ghero{background:
+  linear-gradient(180deg,rgba(5,9,20,.06),rgba(5,9,20,.34)),
+  linear-gradient(to bottom right,color-mix(in oklab,var(--ta2,var(--ta)) 92%,#050914) 0%,color-mix(in oklab,var(--ta2,var(--ta)) 82%,#050914) calc(var(--wp) * 100% - 2.5%),color-mix(in oklab,var(--th) 84%,#050914) calc(var(--wp) * 100% + 2.5%),color-mix(in oklab,var(--th) 94%,#050914) 100%)}
+/* v12.9g: draggable tab strips (player-card props, game tabs, kickoff windows) */
+@media (hover:hover){ .ptabs.more-r,.ptabs.more-l,.stg-tabs.more-r,.stg-tabs.more-l,.sl-pills.more-r,.sl-pills.more-l{cursor:grab} }
+.ptabs.dragging,.stg-tabs.dragging,.sl-pills.dragging{cursor:grabbing;user-select:none;-webkit-user-select:none;scroll-behavior:auto}
+.ptabs.dragging button,.stg-tabs.dragging button,.sl-pills.dragging button{pointer-events:none}
+.games-hist.td .bar:not(.hit){background:var(--band-2);opacity:.7}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} html.stg-on main{filter:none} }
 </style>
 
@@ -1950,6 +2000,19 @@ const sgnU=u=>(u>=0?'+':'−')+Math.abs(u).toFixed(1)+'u';
 const fmt1=v=>v==null?'—':(Math.round(v*10)/10).toString();
 const TEAMC={ARI:'#97233F',ATL:'#A71930',BAL:'#241773',BUF:'#00338D',CAR:'#0085CA',CHI:'#0B162A',CIN:'#FB4F14',CLE:'#FF3C00',DAL:'#003594',DEN:'#FB4F14',DET:'#0076B6',GB:'#203731',HOU:'#03202F',IND:'#002C5F',JAX:'#006778',KC:'#E31837',LA:'#003594',LAC:'#0080C6',LV:'#000000',MIA:'#008E97',MIN:'#4F2683',NE:'#002244',NO:'#D3BC8D',NYG:'#0B2265',NYJ:'#125740',PHI:'#004C54',PIT:'#FFB612',SEA:'#002244',SF:'#AA0000',TB:'#D50A0A',TEN:'#4B92DB',WAS:'#5A1414'};
 const LIGHTC=new Set(['NO','PIT']);
+/* v12.9e (Nov 24, Tristen): game cards use the home team's primary colour and the AWAY team's secondary colour (road jerseys are
+   mostly white, so the secondary/accent colour stands in for "away"); white and near-white secondaries are skipped for the next one */
+const TEAMC2={ARI:'#FFB612',ATL:'#000000',BAL:'#9E7C0C',BUF:'#C60C30',CAR:'#101820',CHI:'#C83803',CIN:'#000000',CLE:'#311D00',DAL:'#869397',DEN:'#002244',DET:'#B0B7BC',GB:'#FFB612',HOU:'#A71930',IND:'#A2AAAD',JAX:'#D7A22A',KC:'#FFB81C',LA:'#FFA300',LAC:'#FFC20E',LV:'#A5ACAF',MIA:'#FC4C02',MIN:'#FFC62F',NE:'#C60C30',NO:'#101820',NYG:'#A71930',NYJ:'#000000',PHI:'#A5ACAF',PIT:'#101820',SEA:'#69BE28',SF:'#B3995D',TB:'#FF7900',TEN:'#0C2340',WAS:'#FFB612'};
+/* v12.9f (Nov 24, Tristen): both teams in their PRIMARY colours; only when the two primaries clash (same colour family, e.g.
+   NYG blue at IND blue, WAS burgundy at ARI red) does the away team switch to its secondary (TEAMC2). Clash = close in OKLab
+   (dE < 0.16), or same hue (within 28 deg) at similar lightness, or both very dark and fairly close. */
+const okLab=h=>{ const v=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255).map(c=>c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4));
+  const l=Math.cbrt(.4122214708*v[0]+.5363325363*v[1]+.0514459929*v[2]),m=Math.cbrt(.2119034982*v[0]+.6806995451*v[1]+.1073969566*v[2]),s=Math.cbrt(.0883024619*v[0]+.2817188376*v[1]+.6299787005*v[2]);
+  return [.2104542553*l+.7936177850*m-.0040720468*s,1.9779984951*l-2.4285922050*m+.4505937099*s,.0259040371*l+.7827717662*m-.8086757660*s]; };
+function colorClash(a,b){ const x=okLab(a),y=okLab(b),d=Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2]),cx=Math.hypot(x[1],x[2]),cy=Math.hypot(y[1],y[2]);
+  let dh=Math.abs(Math.atan2(x[2],x[1])-Math.atan2(y[2],y[1]))*180/Math.PI; dh=Math.min(dh,360-dh);
+  return d<.16||(cx>.06&&cy>.06&&dh<28&&Math.abs(x[0]-y[0])<.2)||(x[0]<.36&&y[0]<.36&&d<.22); }
+const awayC=(t,h)=>{ const a=TEAMC[t]||'#888'; return h&&TEAMC[h]&&colorClash(a,TEAMC[h])&&TEAMC2[t]?TEAMC2[t]:a; };
 const TEAMN={ARI:'Cardinals',ATL:'Falcons',BAL:'Ravens',BUF:'Bills',CAR:'Panthers',CHI:'Bears',CIN:'Bengals',CLE:'Browns',DAL:'Cowboys',DEN:'Broncos',DET:'Lions',GB:'Packers',HOU:'Texans',IND:'Colts',JAX:'Jaguars',KC:'Chiefs',LA:'Rams',LAC:'Chargers',LV:'Raiders',MIA:'Dolphins',MIN:'Vikings',NE:'Patriots',NO:'Saints',NYG:'Giants',NYJ:'Jets',PHI:'Eagles',PIT:'Steelers',SEA:'Seahawks',SF:'49ers',TB:'Buccaneers',TEN:'Titans',WAS:'Commanders'};
 const MK={PY:{label:'Pass yds',unit:'pass yds',step:25,start:125},PC:{label:'Completions',unit:'completions',step:2,start:10},PA:{label:'Pass att',unit:'pass att',step:5,start:20},PTD:{label:'Pass TDs',unit:'pass TDs',step:1,start:1},PRY:{label:'Pass+rush',unit:'pass+rush yds',step:25,start:150},RY:{label:'Rush yds',unit:'rush yds',step:10,start:10},CAR:{label:'Rush att',unit:'rush att',step:2,start:4},RECY:{label:'Rec yds',unit:'rec yds',step:10,start:10},REC:{label:'Receptions',unit:'receptions',step:1,start:1},RRY:{label:'Rush+rec',unit:'rush+rec yds',step:10,start:20},ATD:{label:'Anytime TD',unit:'TD',step:1,start:1},LR:{label:'Longest catch',unit:'yd longest catch',step:10,start:10},LRU:{label:'Longest run',unit:'yd longest run',step:10,start:10}};
 const YDS=new Set(['PY','PRY','RY','RECY','RRY','LR','LRU']);
@@ -2281,17 +2344,42 @@ function popSheet(){ const el=SH.pop(); if(!el) return; el.classList.remove('on'
   setTimeout(()=>el.remove(), RM()?0:480); }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&SH.length) popSheet(); });
 
+/* v12.9 (Nov 24, Tristen): the game Overview shows everything up front: every model pick for the game (with its result once
+   graded), and the game info (kickoff, stadium, weather, DraftKings lines, the model's numbers, QB news, injuries) with
+   nothing folded away */
+function ovPicks(g){ if(!LOG) return []; return LOG.picks.filter(x=>x.week===D.week&&x.game===g.id&&x.type==='prop'&&x.tier==='pick'&&x.result!=='void')
+  .sort((a,b)=>(!!a.result-!!b.result)||(a.price_est?1:0)-(b.price_est?1:0)||b.edge-a.edge); }
+function ovPicksHTML(g){ const ps=ovPicks(g);
+  if(!ps.length) return `<div class="sec ov2"><h3>Picks</h3><p class="ov2-empty">${g.props_live||(g.lines_cov||0)>0?'No prop clears the pick bar in this game.':'Player lines not posted yet.'}</p></div>`;
+  const res=x=>!x.result?'':x.result==='win'?'<i class="ov2-r w">Hit</i>':x.result==='loss'?'<i class="ov2-r l">Miss</i>':'<i class="ov2-r">Push</i>';
+  const rec=recOf(ps.filter(x=>x.mk!=='ATD'));
+  return `<div class="sec ov2"><h3>Picks <span class="ov2-n">${ps.length}${rec.n?` · ${rec.w}–${rec.l}`:''}</span></h3><div class="ov2-list">${ps.map(x=>`<button type="button" class="ov2-pk" data-jump="${x.pid}" data-jmk="${x.mk}"><span class="ov2-t"><span class="side ${x.mk==='ATD'?'over':x.side}">${esc(pickTxt(x))}</span>${res(x)}</span><span class="ov2-p num">${pct(pickP(x))}</span><span class="ov2-e num">+${(x.edge*100).toFixed(1)}</span></button>`).join('')}</div>${ps.some(x=>x.price_est)?'<p class="ov2-foot">Edges assume −110 where no DraftKings price was pulled.</p>':''}</div>`; }
+function ovInfoHTML(g,s,wx){ const dk=g.market.dk, sp=v=>v>0?'+'+v:String(v);
+  const cell=(k,v,sub)=>`<div class="ov2-c"><span class="ov2-k">${k}</span><b>${v}</b>${sub?`<span class="ov2-s">${sub}</span>`:''}</div>`;
+  const w=g.roof==='dome'?['Indoors','']:g.weather&&g.weather.temp!=null?[`${g.weather.temp}°`,[g.weather.wind!=null?`wind ${g.weather.wind}`:'',g.weather.precip?`rain ${g.weather.precip}%`:''].filter(Boolean).join(' · ')]:['—','no forecast yet'];
+  const cells=cell('Kickoff',`${dayShort(g)} ${fmtTime(g.time)}`,esc(g.stadium||''))+cell('Weather',w[0],w[1])
+    +cell('DraftKings',dk?`${dk.home_spread<0?g.home+' '+dk.home_spread:g.away+' '+sp(dk.away_spread)}`:'—',dk?`total ${dk.total}`:'not posted')
+    +cell('Model',`${Math.round(s.pa)}–${Math.round(s.ph)}`,`total ${fmt1(s.total)}`);
+  const SN={OUT:'Out',D:'Doubtful',Q:'Questionable'};
+  const qb=t=>{ const tm=g.teams[t], n=qbOf(tm), p=Object.values(D.players).find(x=>x.team===t&&x.name===n); return `<span class="ov2-qb">${chip(t)}<b>${esc(n)}</b>${p&&p.status==='Q'?'<i class="ov2-q">Q</i>':''}</span>`; };
+  const notes=[g.away,g.home].filter(t=>g.teams[t].qb_note).map(t=>`<p class="ov2-note"><b>${t}</b> ${esc(g.teams[t].qb_note)}</p>`).join('');
+  const inj=[g.away,g.home].map(t=>{ const L=Object.values(D.players).filter(p=>p.game===g.id&&p.team===t&&SN[p.status]&&!/^Depth player/.test(p.detail||''));
+    const grp=['Q','D','OUT'].map(k=>{ const n=L.filter(p=>p.status===k); return n.length?`<span class="ov2-ig"><i class="ov2-st ${k==='OUT'?'o':'q'}">${SN[k]}</i>${n.map(p=>`<span title="${esc(p.detail||'')}">${esc(lastName(p.name))} <small>${p.pos}</small></span>`).join(', ')}</span>`:''; }).join('');
+    return `<div class="ov2-ir">${chip(t)}<div>${grp||'<span class="ov2-none">None listed</span>'}</div></div>`; }).join('');
+  return `<div class="sec ov2"><h3>Game</h3><div class="ov2-grid">${cells}</div></div>
+   <div class="sec ov2"><h3>Quarterbacks</h3><div class="ov2-qbs">${qb(g.away)}${qb(g.home)}</div>${notes}</div>
+   <div class="sec ov2"><h3>Injuries</h3>${inj}</div>`; }
 function gameView(g){ let team=g.away;
   const crest=t=>`<span class="crest ${LIGHTC.has(t)?'lt':''}" style="--tc:${TEAMC[t]}">${t}</span>`;
   const build=()=>{ const s=gameStats(g); const dk=g.market.dk; const aw=s.pa>s.ph; const fav=s.wh>=.5?g.home:g.away;
-    const wx=g.roof==='dome'?'Indoors':g.weather&&g.weather.temp!=null?`${g.weather.temp}°, wind ${g.weather.wind} mph${g.weather.precip!=null?`, rain ${g.weather.precip}%`:''}`:'Forecast not posted';
+    const wx=g.roof==='dome'?'Indoors':g.weather&&g.weather.temp!=null?`${g.weather.temp}°${g.weather.wind!=null?`, wind ${g.weather.wind} mph`:''}${g.weather.precip!=null?`, rain ${g.weather.precip}%`:''}`:'Forecast not posted';
     const spTxt=v=>v==null?'—':(v<0?`${g.home} ${fmt1(v)}`:v>0?`${g.away} ${fmt1(-v)}`:'Even');
     const tLean=dk?(s.total>dk.total?'model higher':'model lower'):'';
     const outs=[g.away,g.home].map(t=>{ const o=(g.teams[t].out||[]); return o.length?`<div><b>${t}</b> <span class="muted">out:</span> ${o.map(x=>esc(x.name)+' ('+x.pos+')').join(', ')}</div>`:''; }).join('');
     const qbn=[g.away,g.home].map(t=>g.teams[t].qb_note?`<div><b>${t}</b> ${esc(g.teams[t].qb_note)}</div>`:'').join('');
     const qbsw=[g.away,g.home].map(t=>{ const tm=g.teams[t], opts=(tm.qb_options&&tm.qb_options.length?tm.qb_options:Object.keys(tm.scen)).filter(q=>tm.scen[q]); if(opts.length<2) return ''; const cur=qbOf(tm);
       return `<div class="qbsw"><span class="xs muted">${t} quarterback</span><div class="seg">${opts.map(q=>`<button type="button" data-qb="${esc(q)}" data-team="${t}" aria-pressed="${q===cur}">${esc(lastName(q))}${q===tm.qb_default?'':' ·alt'}</button>`).join('')}</div></div>`; }).join('');
-    return `<div class="card ghero" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]};${shareVars(s.wa)}">${heroStatus(g,s)}
+    return `<div class="card ghero" style="--ta:${TEAMC[g.away]};--ta2:${awayC(g.away,g.home)};--th:${TEAMC[g.home]};${shareVars(s.wa)}">${heroStatus(g,s)}
     <div class="mh"><div class="tm">${crest(g.away)}<span class="tn">${esc(TEAMN[g.away])}</span></div>
       <div class="mid"><span>${dayShort(g)} ${fmtTime(g.time)}</span><div style="display:flex;gap:18px;align-items:center;margin:6px 0">${(()=>{ const f=scoreOf(g); return f?`<span class="pts num ${f.a<f.h?'lose':''}">${f.a}</span><span class="pts num ${f.h<f.a?'lose':''}">${f.h}</span>`:`<span class="pts num ${aw?'':'lose'}">${Math.round(s.pa)}</span><span class="pts num ${aw?'lose':''}">${Math.round(s.ph)}</span>`; })()}</div><b>${scoreOf(g)?'final':'projected'}</b></div>
       <div class="tm">${crest(g.home)}<span class="tn">${esc(TEAMN[g.home])}</span></div></div>
@@ -2299,10 +2387,9 @@ function gameView(g){ let team=g.away;
     <div class="mrow"><div><span class="k">Winner</span><span class="v">${fav}</span><span class="s num">${pct(Math.max(s.wh,s.wa))} to win</span></div>
       <div><span class="k">Spread</span><span class="v num">${spTxt(s.spreadHome)}</span><span class="s num">DK ${spTxt(dk?dk.home_spread:null)}</span></div>
       <div><span class="k">Total</span><span class="v num">${fmt1(s.total)}</span><span class="s num">DK ${dk?dk.total:'—'}${tLean?' · '+tLean:''}</span></div></div></div>
-   <p class="sm muted" style="margin:12px 4px 0">${esc(g.stadium||'')} · ${esc(wx)}</p>
-   ${(()=>{ const gp=gamePicks(g); return gp.length?`<div class="sec"><h3>Model picks in this game · ${gp.length}</h3><div class="tpicks">${gp.slice(0,8).map(x=>`<button type="button" class="tpick press" data-jump="${x.pid}" data-jmk="${x.mk}"><span class="side ${x.mk==='ATD'?'over':x.side}">${esc(pickTxt(x))}</span><b class="num">${pct(pickP(x))}</b><span class="xs muted num">${x.price_est?'−110 est':fmtO(x.price)} · edge ${sg(x.edge*100)}</span></button>`).join('')}</div></div>`:''; })()}
+   ${ovPicksHTML(g)}
+   ${ovInfoHTML(g,s,wx)}
    ${qbsw?`<div class="sec"><h3>What if</h3><div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">${qbsw}<span class="xs muted">Switching the quarterback re-runs this game's ${(g.sims||N).toLocaleString()} simulations. Weather what-ifs are under More on this game.</span></div></div>`:''}
-   ${qbn||outs?`<div class="sec"><h3>News</h3><div class="note outs">${qbn}${outs}</div></div>`:''}
    <div class="sec"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><h3 style="margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Players</h3>
      <div class="seg" id="tmSeg"><button type="button" data-t="${g.away}" aria-pressed="${team===g.away}">${TEAMN[g.away]}</button><button type="button" data-t="${g.home}" aria-pressed="${team===g.home}">${TEAMN[g.home]}</button></div></div>
      <div class="sm muted" style="margin:0 2px 10px">Tap a player for his card: projections against the DraftKings lines, the model's side and the line slider.</div>
@@ -2481,7 +2568,7 @@ function mountPlayer(el,pid,mkSel,full){ const p=D.players[pid]; const main=MAIN
   const draw=(mk,first)=>{ cur=ms.find(m=>m.mk===mk); const btn=tabs.querySelector(`[data-mk="${mk}"]`); tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',b===btn?'true':'false')); slide(btn,first);
     if(cur.mk==='ATD'){ const ov=p.lines&&p.lines.ATD&&p.lines.ATD.ov, h=hits(p,'ATD',.5); pn.dataset.k='td';
       pn.innerHTML=col('To score',pct(cur.po),'fair '+amer(cur.po))+col('DK price',ov!=null?fmtO(ov):'—',ov!=null?'needs '+pct(implied(ov)):'not posted')+col('Season',h.k+'/'+h.n,'games with a TD');
-      pbar.innerHTML=''; pline.innerHTML=''; prest.innerHTML=why(cur); }
+      pbar.innerHTML=''; pline.innerHTML=tdSecs(cur); prest.innerHTML=tdLadder(cur)+why(cur); }
     else { const m=cur, hi=barScale(m);
       if(pn.dataset.k!=='bar'){ pn.dataset.k='bar'; pn.innerHTML=col('Projection','0','','hv-proj')+col('','','','hv-line')+col('Model','','','hv-mod'); }
       pbar.innerHTML=`<div class="herobar">${rangeBar(m,'big')}<div class="hb-scale num xs muted"><span>0</span><span class="hb-cap">${full?'Drag to test a line':'Drag the line to test any number'}</span><button type="button" class="rst" hidden>Reset</button><span>${Math.round(hi)}</span></div></div>`;
@@ -2494,6 +2581,31 @@ function mountPlayer(el,pid,mkSel,full){ const p=D.players[pid]; const main=MAIN
     grow(el); };
   draw(cur.mk,true); tabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); if(b.dataset.mk!==cur.mk) draw(b.dataset.mk); }));
   requestAnimationFrame(()=>slide(tabs.querySelector('[aria-selected="true"]'),true)); }
+/* v12.9g (Nov 24, Tristen): anytime-TD tab gets the same history as the yardage / catch props: touchdowns in each game this
+   season (bars, filled when he scored), his rushing / receiving split, his games vs this opponent, and the model's chance of 1+, 2+, 3+ */
+function tdSecs(m){ const p=m.p, h=hits(p,'ATD',.5), hist=h.v.slice(0,10).reverse(), hmax=Math.max(2,...hist)*1.15;
+  const log=(p.log||[]).filter(r=>p.pos!=='QB'||r.att>=10), rt=log.reduce((s,r)=>s+(r.rtd||0),0), ct=log.reduce((s,r)=>s+(r.rectd||0),0);
+  const vsR=(p.vs||[]).map(r=>({v:logVal(r,'ATD'),rest:!!r.rest,d:r.date})).filter(x=>x.v!=null), vs=vsR.filter(x=>!x.rest);
+  return `<div class="sec"><h3>This season · ${h.k}/${h.n} games with a TD</h3>${hist.length?`<div class="games-hist td">${hist.map(v=>`<div class="col"><div class="bar ${v>=1?'hit':''}" style="height:${v?Math.max(8,v/hmax*64):3}px;transform:scaleY(.02)" data-grow="scaleY(1)" title="${v} TD"></div><span class="num">${v}</span></div>`).join('')}</div>`:'<div class="sm muted">No games this season.</div>'}
+   <div class="qs num"><span>Total <b>${rt+ct} TD</b></span><span>Rushing <b>${rt}</b> · receiving <b>${ct}</b></span></div>${vsR.length?`<div class="sm muted" style="margin-top:6px">vs ${p.opp} since 2024: ${vsR.map(x=>x.rest?`<s title="Starters rested (${esc(x.d)}): not counted">${x.v}</s>*`:x.v).join(', ')} TD${vs.length?` (scored in ${vs.filter(x=>x.v>=1).length} of ${vs.length})`:''}</div>`:''}</div>`; }
+function tdLadder(m){ const r=[1,2,3].map(k=>({k,p:k===1?m.po:cal(HMSim.pAtLeast(m.arr,k),'td'),h:hits(m.p,'ATD',k-.5)})).filter(x=>x.p!=null&&x.p>=.01);
+  return `<div class="sec"><h3>Touchdown chances</h3><div class="ladder">${r.map(x=>`<div class="rung"><span class="num"><b>${x.k}+</b></span><div class="pb"><i style="transform:scaleX(0);width:100%" data-grow="scaleX(${x.p.toFixed(3)})"></i></div><span class="r num">${pct(x.p)}</span><span class="r num muted">${x.h.n?x.h.k+'/'+x.h.n:'—'}</span></div>`).join('')}</div><p class="xs muted" style="margin:8px 0 0">Model chance of scoring at least that many, and games this season he did.</p></div>`; }
+/* v12.9g (Tristen): the prop tabs in a player card (and the game / kickoff tab strips) can be dragged sideways with the mouse,
+   and a mouse wheel scrolls them sideways; a drag never counts as a tap on a tab */
+(()=>{ const SEL='.ptabs,.stg-tabs,.sl-pills'; let G=null;
+  document.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse'||e.button!==0) return; const el=e.target.closest&&e.target.closest(SEL); if(!el||el.scrollWidth<=el.clientWidth+1) return;
+    G={el,x:e.clientX,sl:el.scrollLeft,moved:false}; });
+  document.addEventListener('pointermove',e=>{ if(!G) return; const dx=e.clientX-G.x; if(!G.moved&&Math.abs(dx)<5) return;
+    if(!G.moved){ G.moved=true; G.el.classList.add('dragging'); } G.el.scrollLeft=G.sl-dx; e.preventDefault(); });
+  const end=()=>{ if(!G) return; const g=G; G=null; g.el.classList.remove('dragging');
+    if(g.moved){ const stop=ev=>{ ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener('click',stop,{capture:true,once:true}); setTimeout(()=>document.removeEventListener('click',stop,{capture:true}),60); } };
+  document.addEventListener('pointerup',end); document.addEventListener('pointercancel',end);
+  document.addEventListener('wheel',e=>{ const el=e.target.closest&&e.target.closest(SEL); if(!el||el.scrollWidth<=el.clientWidth+1||e.ctrlKey) return;
+    if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){ el.scrollLeft+=e.deltaY; e.preventDefault(); } },{passive:false});
+  /* the strip shows it scrolls: soft fade on the side that has more tabs */
+  const fade=el=>{ el.classList.toggle('more-r',el.scrollLeft+el.clientWidth<el.scrollWidth-2); el.classList.toggle('more-l',el.scrollLeft>2); };
+  document.addEventListener('scroll',e=>{ const el=e.target; if(el&&el.matches&&el.matches(SEL)) fade(el); },true);
+  new MutationObserver(()=>document.querySelectorAll(SEL).forEach(el=>{ if(!el._fd){ el._fd=1; requestAnimationFrame(()=>fade(el)); } })).observe(document.body,{childList:true,subtree:true}); })();
 function expandUnder(row,pid,mk){ let x=row.nextElementSibling; if(!x||!x.classList.contains('xacc')){ x=document.createElement('div'); x.className='xacc'; x.innerHTML='<div class="xin"></div>'; row.after(x); mountPlayer(x.firstChild,pid,mk,true); void x.offsetHeight; }
   const open=!x.classList.contains('open'); row.classList.toggle('on',open); if(open) raf2(()=>{ x.classList.add('open'); grow(x); }); else x.classList.remove('open'); }
 function lineSecs(m,l,anim){ const p=m.p, h=hits(p,m.mk,l);
@@ -3815,7 +3927,7 @@ const ftSig=S=>[S.st,S.sc?S.sc.a+'-'+S.sc.h:'',S.nres,S.n,S.all.u.toFixed(2)].jo
 const ftLabel=(g,S)=>`${TEAMN[g.away]||g.away} at ${TEAMN[g.home]||g.home}, ${GST_L[S.st]}${S.sc?`, final ${S.sc.a} to ${S.sc.h}`:''}: open game`;
 /* v12.3: a card's colour split follows the model's win chance. For a corner-to-corner gradient the away side's area is
    2p² (p ≤ ½) or 1 − 2(1 − p)², so p = √(wa/2) or 1 − √((1 − wa)/2) gives an area share of exactly wa, at any card shape. */
-const shareP=wa=>{ wa=Math.max(.03,Math.min(.97,wa)); return wa<=.5?Math.sqrt(wa/2):1-Math.sqrt((1-wa)/2); };
+const shareP=wa=>{ wa=Math.max(.3,Math.min(.7,wa));   /* v12.9d: each team keeps at least 30% of the card, so both teams' colours always show */ return wa<=.5?Math.sqrt(wa/2):1-Math.sqrt((1-wa)/2); };
 const shareVars=wa=>`--wa:${wa.toFixed(3)};--wp:${shareP(wa).toFixed(3)}`;
 function setShare(el,wa){ if(!el) return; el.style.setProperty('--wa',wa.toFixed(3)); el.style.setProperty('--wp',shareP(wa).toFixed(3)); }
 function ftFill(f,g,s){ const w=f.querySelector('.ft-w'); if(!w) return; setShare(f,s.wa);
@@ -3825,7 +3937,7 @@ function ftFill(f,g,s){ const w=f.querySelector('.ft-w'); if(!w) return; setShar
   const sc=scoreOf(g), pw=s.wh>=.5?g.home:g.away, aw=sc?(sc.a>sc.h?g.away:sc.h>sc.a?g.home:null):null;
   w.innerHTML=`Projected ${Math.round(s.pa)}–${Math.round(s.ph)} · model had ${esc(TEAMN[pw]||pw)} ${pct(Math.max(s.wa,s.wh))}${aw?(aw===pw?' <span class="ft-ok">✓ called it</span>':' <span class="ft-no">✗ missed</span>'):''}`; }
 function featHTML(gs){ const SS=gs.map(g=>gState(g)), cnt={}; SS.forEach(S=>cnt[S.st]=(cnt[S.st]||0)+1);
-  return `<div class="feat"><div class="ft-track" id="ftTrack" tabindex="-1">${gs.map((g,i)=>{ const S=SS[i]; return `<button type="button" class="ft" data-fg="${g.id}" data-st="${S.st}" data-fin="${S.sc?1:0}" data-sig="${ftSig(S)}" aria-label="${esc(ftLabel(g,S))}" style="--ta:${TEAMC[g.away]};--th:${TEAMC[g.home]}">${ftInner(g,S)}</button>`; }).join('')}</div>
+  return `<div class="feat"><div class="ft-track" id="ftTrack" tabindex="-1">${gs.map((g,i)=>{ const S=SS[i]; return `<button type="button" class="ft" data-fg="${g.id}" data-st="${S.st}" data-fin="${S.sc?1:0}" data-sig="${ftSig(S)}" aria-label="${esc(ftLabel(g,S))}" style="--ta:${TEAMC[g.away]};--ta2:${awayC(g.away,g.home)};--th:${TEAMC[g.home]}">${ftInner(g,S)}</button>`; }).join('')}</div>
    ${gs.length>1?`<div class="ft-pager"><button type="button" class="ft-nav press" data-fgo="-1" aria-label="Previous game">${SVG_L}</button><div class="ft-dots" id="ftDots">${gs.map((g,i)=>`<button type="button" data-fd="${i}" data-st="${SS[i].st}" aria-label="${esc(g.away)} at ${esc(g.home)}, ${GST_L[SS[i].st]}"></button>`).join('')}</div><button type="button" class="ft-nav press" data-fgo="1" aria-label="Next game">${SVG_R}</button></div>`:''}
    <div class="ft-legend" id="ftLegend">${ftLegend(cnt)}</div></div>`; }
 function ftLegend(cnt){ return GST_K.filter(k=>cnt[k]).map(k=>`<button type="button" class="press" data-fj="${k}"><i data-st="${k}"></i>${cnt[k]} ${GST_L[k].toLowerCase()}</button>`).join(''); }
@@ -3999,16 +4111,9 @@ function bindRows(){ $('#main').querySelectorAll('.game.ev').forEach(c=>{ if(c._
   c.addEventListener('click',e=>{ if(e.target.closest('.ev-more')){ e.stopPropagation(); toggleDet(c); return; } toggleGame(c.parentElement); });
   c.addEventListener('keydown',e=>{ if(e.target===c&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); toggleGame(c.parentElement); } }); }); }
 
-/* game Overview: three picks up front, the rest on request; game info and what-ifs fold away; spread and total in the hero */
-function stageTidy(pg){ const hero=pg.querySelector('.gpad > .ghero'), ov=pg.querySelector('[data-panel="overview"]'); if(!ov) return;
-  const mr=hero&&hero.querySelector(':scope > .mrow'); if(mr){ const d=document.createElement('div'); d.className='dd hdd'; d.innerHTML=`<button type="button" class="dd-h" aria-expanded="false"><span class="dd-t">Spread and total</span>${CHEV}</button><div class="acc"><div class="acc-in"></div></div>`; mr.before(d); d.querySelector('.acc-in').appendChild(mr); }
-  const tp=ov.querySelector('.tpicks'); if(tp&&tp.children.length>3){ tp.classList.add('clip'); const n=tp.children.length-3; const b=document.createElement('button'); b.type='button'; b.className='btn ghost press tp-more'; b.setAttribute('aria-expanded','false'); b.textContent=`Show ${n} more`; tp.after(b);
-    b.addEventListener('click',()=>{ const show=tp.classList.contains('clip'); tp.classList.toggle('clip',!show); b.setAttribute('aria-expanded',show); b.textContent=show?'Show fewer':`Show ${n} more`;
-      if(show&&!RM()) [...tp.children].slice(3).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(-10px) scale(.98)'},{opacity:1,transform:'none'}],{duration:440,delay:i*45,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'})); }); }
-  const stad=[...ov.children].find(x=>x.tagName==='P'), news=[...ov.querySelectorAll(':scope > .sec')].find(s=>/^News/.test((s.querySelector('h3')||{}).textContent||'')), what=[...ov.querySelectorAll(':scope > .sec')].find(s=>/^What if/.test((s.querySelector('h3')||{}).textContent||''));
-  if(stad||news){ const s=document.createElement('div'); s.className='sec'; s.innerHTML='<h3>Game info</h3>'; const hint=stad?(stad.textContent.split(' · ').slice(1).join(' · ')||''):'';
-    if(stad){ stad.removeAttribute('style'); stad.className='sm muted gi-wx'; s.appendChild(stad); } if(news){ const nb=news.querySelector('.note'); if(nb) s.appendChild(nb); news.remove(); }
-    ov.appendChild(s); secToDD(s,{hint}); }
+/* game Overview (v12.9, Tristen Nov 24): picks and game info are shown in full, nothing folded; only the QB what-if switcher folds */
+function stageTidy(pg){ const ov=pg.querySelector('[data-panel="overview"]'); if(!ov) return;
+  const what=[...ov.querySelectorAll(':scope > .sec')].find(s=>/^What if/.test((s.querySelector('h3')||{}).textContent||''));
   if(what){ ov.appendChild(what); secToDD(what,{hint:'switch the quarterback'}); } }
 function foldSecs(el){ el.querySelectorAll('.pc2 .sec').forEach(s=>{ if(s.classList.contains('dd')) return; const t=((s.querySelector(':scope > h3')||{}).textContent||'').split(' · ')[0].trim(); secToDD(s,{open:PC_OPEN.has(t)}); }); }
 
