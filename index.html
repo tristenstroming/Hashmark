@@ -1887,6 +1887,41 @@ html.stg-full main,html.stg-full .top{opacity:0!important;transition:none!import
 .stg-page.dropping .gpad .drop-v{visibility:visible}
 /* v13.5: the player card's own charts are drawn at their final values while it grows (growNow) */
 .notr .rb .b1,.notr .rb .b2,.notr .rb .md,.notr .rb .ln,.notr [data-grow]{transition:none!important}
+
+/* v13.8 (Nov 25, Tristen): switching tabs is a swipe. The page under the header flies out the way you are moving (Slate -> Picks:
+   out to the left, Picks in from the right; back the other way going left) while the header / sidebar and the tab bar stay put. */
+html.vt-tab .top{view-transition-name:hm-top}
+html.vt-tab #tabbar{view-transition-name:hm-tabbar}
+html.vt-tab::view-transition-group(hm-top),html.vt-tab::view-transition-group(hm-tabbar){animation:none}
+html.vt-tab::view-transition-old(hm-top),html.vt-tab::view-transition-old(hm-tabbar){animation:none;opacity:0}
+html.vt-tab::view-transition-new(hm-top),html.vt-tab::view-transition-new(hm-tabbar){animation:none}
+html.vt-tab::view-transition-old(root),html.vt-tab::view-transition-new(root){mix-blend-mode:normal;transform-origin:50% 40%}
+/* the two pages move as one strip (no double image): the old one flies out a full width while fading and dropping back a little,
+   the new one comes in right behind it */
+html.vt-tab::view-transition-old(root){animation:tabOut .5s cubic-bezier(.32,.72,0,1) both}
+html.vt-tab::view-transition-new(root){animation:tabIn .5s cubic-bezier(.32,.72,0,1) both}
+@keyframes tabOut{0%{opacity:1;transform:none}100%{opacity:.15;transform:translateX(calc(var(--dir,0)*-100%)) scale(.94)}}
+@keyframes tabIn{0%{opacity:.7;transform:translateX(calc(var(--dir,0)*100%))}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){ html.vt-tab::view-transition-old(root),html.vt-tab::view-transition-new(root){animation:none} }
+
+/* v13.8: Picks tab filters (search, a Filters panel, sort, active-filter chips) */
+.pfbar{display:flex;gap:10px;align-items:center}
+.pfbar .fsearch{flex:1 1 auto;min-width:0}
+.pfbar .fsearch input{height:42px;padding:0 14px}
+.pfbtn{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 15px;border-radius:14px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);transition:background-color .25s,color .25s,border-color .25s}
+.pfbtn svg{width:17px;height:17px;flex:0 0 auto}
+.pfbtn[aria-expanded="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pfn{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;line-height:1}
+.pfn:empty{display:none}
+.pfdd > .acc > .acc-in{padding:12px 0 4px;margin:0 -6px;padding-left:6px;padding-right:6px}
+.pfdd .fbox{box-shadow:none}
+.pfact{display:flex;justify-content:space-between;align-items:center;gap:10px}
+@media (min-width:760px){ .pfact{grid-column:1/-1} }
+.pfon{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pfon:empty{display:none}
+.pfon .chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel);animation:fallIn .35s var(--exp) both;animation-delay:calc(var(--i,0)*35ms)}
+.pfon .chip svg{width:12px;height:12px;opacity:.6}
+.plk .ppos{font-weight:600}
 </style>
 
 <header class="top"><div class="top-in">
@@ -2354,9 +2389,17 @@ function tdHTML(g){ const rows=[]; for(const [pid,p] of Object.entries(D.players
 /* ---------- views ---------- */
 const VORDER=['slate','picks','filter','record','more','about'];
 const VISITED=new Set();
-function setView(v, push){ closeStage(true); document.documentElement.style.setProperty('--dir',Math.sign(VORDER.indexOf(v)-VORDER.indexOf(VIEW))); if(v!=='more'){ TOOL=null; stopWatch(); } VIEW=v; store.set('view',v); document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v?'page':'false'));
+/* v13.8 (Nov 25, Tristen): a tab switch looks like a swipe. The page under the header flies out the way you're going (Slate -> Picks:
+   out to the left while Picks flies in from the right; the other way going back) and the header / sidebar and tab bar stay put
+   (html.vt-tab names them, so the view transition only moves the page). Without view transitions the new page slides in alone. */
+let VT_TOK=0;
+function tabSwipe(dir,run){ const html=document.documentElement, tok=++VT_TOK; html.style.setProperty('--vsd',Math.round(Math.min(innerWidth*.42,340))+'px');
+  if(document.startViewTransition){ html.classList.add('vt-tab'); let t; try{ t=document.startViewTransition(run); }catch(e){ html.classList.remove('vt-tab'); run(); return; }
+    t.finished.finally(()=>{ if(tok===VT_TOK) html.classList.remove('vt-tab'); }); return; }
+  run(); const vw=document.querySelector('#main > .view'); if(vw&&dir&&vw.animate) vw.animate([{opacity:0,transform:`translateX(${dir*Math.min(innerWidth*.42,340)}px) scale(.985)`},{opacity:1,offset:.45},{opacity:1,transform:'none'}],{duration:560,easing:'cubic-bezier(.16,1,.3,1)'}); }
+function setView(v, push){ closeStage(true); const dir=Math.sign(VORDER.indexOf(v)-VORDER.indexOf(VIEW)); document.documentElement.style.setProperty('--dir',dir); if(v!=='more'){ TOOL=null; stopWatch(); } VIEW=v; store.set('view',v); document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v?'page':'false'));
   movePill(); const run=()=>{ RENDER_CALM=VISITED.has(v); try{ ({slate:renderSlate,picks:renderPicks,record:renderRecord,filter:renderFilter,more:renderMore,about:renderAbout})[v](); }finally{ RENDER_CALM=false; } const vw=document.querySelector('#main > .view'); if(vw&&VISITED.has(v)) vw.classList.add('calm'); VISITED.add(v); window.scrollTo({top:0}); };
-  if(document.startViewTransition&&!RM()&&push) document.startViewTransition(run); else run(); }
+  if(push&&!RM()) tabSwipe(dir,run); else run(); }
 const snapOnce=(el,fn)=>{ if(el.dataset.ready){ fn(); return; } el.dataset.ready='1'; el.style.transition='none'; fn(); void el.offsetWidth; el.style.transition=''; };   // v11: the highlight starts in place on first load
 function movePill(){ const nav=$('#nav'), b=nav.querySelector('[aria-current="page"]'), pill=nav.querySelector('.pill'); if(b&&pill&&b.offsetWidth){ const col=getComputedStyle(nav).flexDirection==='column'; snapOnce(pill,()=>{ pill.style.width=b.offsetWidth+'px'; pill.style.height=col?b.offsetHeight+'px':''; pill.style.transform=col?`translateY(${b.offsetTop}px)`:`translateX(${b.offsetLeft-4}px)`; }); }
   const tb=$('#tabbar'), bb=tb&&tb.querySelector('.blob'), cb=tb&&tb.querySelector('[aria-current="page"]'); if(bb&&cb&&cb.offsetWidth){ /* v12.4: the highlight is a capsule behind the icon, centred on the tab */ const w=Math.min(60,cb.offsetWidth-12), x=Math.round(cb.offsetLeft+(cb.offsetWidth-w)/2), px=bb.dataset.x; snapOnce(bb,()=>{ bb.style.width=w+'px'; bb.style.transform=`translateX(${x}px)`; });
@@ -2722,36 +2765,97 @@ function lineSecs(m,l,anim){ const p=m.p, h=hits(p,m.mk,l);
      <div class="qs num"><span>Likely range <b>${m.q.q25}–${m.q.q75}</b></span><span>10–90% <b>${m.q.q10}–${m.q.q90}</b></span></div>${vsR.length?`<div class="sm muted" style="margin-top:6px">vs ${p.opp} since 2024: ${vsR.map(x=>x.rest?`<s title="Starters rested (${esc(x.d)}): not counted">${x.v}</s>*`:x.v).join(', ')}${vs.length?` (avg ${fmt1(vs.reduce((a,b)=>a+b,0)/vs.length)})`:''}${vsRest.length?`<br><span class="xs">* ${vsRest.map(x=>esc(x.d)).join(', ')}: starters rested late in the season, so that game is left out of the average and the model.</span>`:''}</div>`:''}</div>`; }
 
 /* picks */
-let PF=store.get('pf',{side:'all',mode:'picks'});
+/* v13.8 (Nov 25, Tristen): the Picks tab is filterable. A search box (player or team) and a Filters button open a panel with
+   status, side, stat, position, game and a minimum edge; a sort (best edge / kickoff / most likely); a count line with the filtered
+   record once games are graded; and chips for the active filters (tap one to clear it). Search, stat, position and game also apply
+   to Alt lines. Choices are kept per browser (store 'pf'). */
+const PF_DEF={mode:'picks',side:'all',st:'all',stat:'all',pos:'any',game:'all',q:'',sort:'edge',minE:4,open:false};
+let PF=Object.assign({},PF_DEF,store.get('pf',{}));
+const PF_ALT=['stat','pos','game'], PF_ALL=['st','side','stat','pos','game','minE'];
+const PF_STAT=[['all','All'],['pass','Passing'],['rush','Rushing'],['recy','Rec yards'],['rec','Catches'],['td','Touchdowns']];
+const PF_ST=[['all','All'],['open','To play'],['graded','Graded'],['win','Hits'],['loss','Misses']];
+const PF_SIDE=[['all','Either'],['over','Overs'],['under','Unders']];
+const PF_SORT=[['edge','Best edge'],['kick','Kickoff'],['p','Most likely']];
+const FUNNEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6.2 7.4V19l-3.6-1.8v-4.8z"/></svg>';
+const XS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function weekPicks(){ if(!LOG) return []; return LOG.picks.filter(x=>x.week===D.week&&x.type==='prop'&&x.tier==='pick'&&x.result!=='void'); }
-function renderPicks(){ const ps=weekPicks(); const pend=ps.filter(x=>!x.result);
-  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Picks</h1><p>Props where the model's chance beats the DraftKings price by 4+ points (anytime TDs: 8+). Logged when the line posts and graded from box scores. Where DraftKings' price wasn't pulled, −110 is assumed.</p></div>
-    <div class="seg" id="pmode"><button type="button" data-m="picks" aria-pressed="${PF.mode==='picks'}">Model picks</button><button type="button" data-m="alt" aria-pressed="${PF.mode==='alt'}">Alt lines</button></div></div>
-    <div id="pbox"></div></section>`;
-  $('#pmode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ PF.mode=b.dataset.m; store.set('pf',PF); renderPicks(); }));
-  if(PF.mode==='alt'){ renderAlt(); return; }
-  const fl=x=>PF.side==='all'||x.side===PF.side;
-  const rows=ps.filter(fl).sort((a,b)=>(!!a.result-!!b.result)||b.edge-a.edge);
-  $('#pbox').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div class="chips">${['all','over','under'].map(s=>`<button type="button" class="chip press" data-s="${s}" aria-pressed="${PF.side===s}">${s==='all'?'All':s==='over'?'Overs':'Unders'}</button>`).join('')}</div><span class="sm muted num">${ps.length} picks · ${pend.length} to play</span></div>
-   <div class="card">${rows.length?rows.map(pickRow).join(''):'<div class="empty">No picks logged for this week yet. They appear once DraftKings posts player lines.</div>'}</div>`;
-  $('#pbox').querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{ PF.side=b.dataset.s; store.set('pf',PF); renderPicks(); }));
-  $('#pbox').querySelectorAll('.plk').forEach(b=>b.addEventListener('click',()=>expandUnder(b,b.dataset.p,b.dataset.mk)));
-  grow($('#pbox')); }
-function pickRow(x){ const p=D.players[x.pid]; const g=D.games.find(y=>y.id===x.game); const bet=x.mk==='ATD'?'Anytime TD':`${x.side==='over'?'Over':'Under'} ${x.close_line??x.line} ${MK[x.mk].unit}`;
-  const res=x.result?`<span class="tag ${x.result}">${x.result==='win'?'Hit':x.result==='loss'?'Miss':x.result}${x.actual!=null?' · '+x.actual:''}</span>`:'';
-  return `<button type="button" class="plk press" data-p="${x.pid}" data-mk="${x.mk}"><div class="who"><b>${esc(x.name)}</b><span class="xs muted">${x.team} · ${esc(x.matchup)}${g?' · '+dayShort(g)+' '+fmtTime(g.time):''}</span></div>
-   <div class="mid"><div class="bet"><span class="side ${x.side}">${bet}</span></div></div>
-   <div class="r"><span class="pc num">${pct(x.p_over!=null?(x.side==='over'?x.p_over:1-x.p_over):x.model_p)}</span><span class="xs muted num">${x.price_est?'est −110':fmtO(x.price)} · edge +${(x.edge*100).toFixed(1)}</span>${res}</div></button>`; }
-function renderAlt(){ const rows=[]; const now=Date.now();
+const pickPos=x=>{ const p=D.players[x.pid]; return p?p.pos:(x.pos||''); };
+const pickKick=x=>{ const g=D.games.find(y=>y.id===x.game); return g?kick(g):0; };
+const pfText=(name,team)=>{ const q=PF.q.trim().toLowerCase(); return !q||name.toLowerCase().includes(q)||team.toLowerCase().includes(q)||(TEAMN[team]||'').toLowerCase().includes(q); };
+const pfKeys=()=>PF.mode==='alt'?PF_ALT:PF_ALL;
+const pfCount=()=>pfKeys().filter(k=>String(PF[k])!==String(PF_DEF[k])).length;
+const pfSave=()=>store.set('pf',PF);
+const gameLab=id=>{ const g=D.games.find(y=>y.id===id); return g?`${g.away} @ ${g.home}`:id; };
+function altRows(){ const rows=[]; const now=Date.now();
   for(const [pid,p] of Object.entries(D.players)){ if(p.status==='OUT'||p.status==='D') continue; const g=D.games.find(x=>x.id===p.game); if(!g||kick(g)<now) continue; if(p.pos==='QB'&&p.name!==qbOf(g.teams[p.team])) continue;
     for(const mk of (KEY_POS[p.pos]||[])){ const m=market(pid,mk); if(!m) continue; const def=MK[mk]; let k=def.start, best=null;
       for(let i=0;i<60;i++){ const h=hits(p,mk,k-.5); if(h.n<5||h.k/h.n<.8) break; best={k,h}; k+=def.step; }
       if(!best) continue; const pr=cal(HMSim.pAtLeast(m.arr,best.k),famOf(mk)); if(pr==null||pr>.97||pr<.5) continue; rows.push({pid,p,g,m,k:best.k,h:best.h,pr}); } }
-  rows.sort((a,b)=>b.pr-a.pr);
-  $('#pbox').innerHTML=`<p class="sm muted" style="margin:0 2px 12px">The highest number each player reached in 80%+ of his games this season (5+ games), with the model's chance he gets there this week.</p>
-   <div class="card">${rows.length?rows.slice(0,80).map(r=>`<button type="button" class="plk press" data-p="${r.pid}" data-mk="${r.m.mk}"><div class="who"><b>${esc(r.p.name)}</b><span class="xs muted">${r.p.team} ${r.p.pos} · ${esc(r.g.key)} · ${dayShort(r.g)} ${fmtTime(r.g.time)}</span></div><div class="mid"><div class="bet">${r.k}+ ${esc(MK[r.m.mk].unit)}</div><span class="xs muted num">hit ${r.h.k}/${r.h.n} games · proj ${r.m.q.q50}</span></div><div class="r"><span class="pc num">${pct(r.pr)}</span><span class="xs muted num">fair ${amer(r.pr)}</span></div></button>`).join(''):'<div class="empty">No alt lines meet the bar yet.</div>'}</div>`;
-  $('#pbox').querySelectorAll('.plk').forEach(b=>b.addEventListener('click',()=>expandUnder(b,b.dataset.p,b.dataset.mk))); }
-
+  return rows.sort((a,b)=>b.pr-a.pr); }
+/* the options each chip row offers: only what this week's list actually has (a remembered game from last week falls back to All) */
+function pfOpts(base){ const alt=PF.mode==='alt';
+  const mks=new Set(base.map(r=>alt?r.m.mk:r.mk)), poss=new Set(base.map(r=>alt?r.p.pos:pickPos(r))), gids=[...new Set(base.map(r=>alt?r.g.id:r.game))];
+  gids.sort((a,b)=>{ const ga=D.games.find(y=>y.id===a), gb=D.games.find(y=>y.id===b); return (ga?kick(ga):0)-(gb?kick(gb):0); });
+  const o={ stat:PF_STAT.filter(([k])=>k==='all'||(FGRP[k]||[]).some(mk=>mks.has(mk))), pos:[['any','All']].concat(['QB','RB','WR','TE'].filter(x=>poss.has(x)).map(x=>[x,x])),
+    game:[['all','All games']].concat(gids.map(id=>{ const g=D.games.find(y=>y.id===id); return [id,g?`${g.away} @ ${g.home} · ${dayShort(g)}`:id]; })),
+    st:base.some(r=>r.result&&r.result!=='void')?PF_ST:null, side:PF_SIDE };
+  for(const k of ['stat','pos','game']) if(!o[k].some(([v])=>String(v)===String(PF[k]))) PF[k]=PF_DEF[k];
+  if(!o.st) PF.st='all';
+  return o; }
+function renderPicks(){ const alt=PF.mode==='alt';
+  $('#main').innerHTML=`<section class="view"><div class="vhead"><div><h1>Picks</h1><p>Props where the model's chance beats the DraftKings price by 4+ points (anytime TDs: 8+). Logged when the line posts and graded from box scores. Where DraftKings' price wasn't pulled, −110 is assumed.</p></div>
+    <div class="seg" id="pmode"><button type="button" data-m="picks" aria-pressed="${!alt}">Model picks</button><button type="button" data-m="alt" aria-pressed="${alt}">Alt lines</button></div></div>
+    <div class="pfbar"><div class="fsearch"><input type="search" id="pQ" placeholder="Search a player or team" value="${esc(PF.q)}" autocomplete="off" aria-label="Search by player or team"></div>
+     <button type="button" class="pfbtn press" id="pfBtn" aria-expanded="${!!PF.open}" aria-controls="pfPanel">${FUNNEL}<span>Filters</span><b class="pfn num" id="pfN"></b></button></div>
+    <div class="dd pfdd${PF.open?' open':''}" id="pfPanel"><div class="acc"><div class="acc-in"><div class="card fbox" id="pfbox"></div></div></div></div>
+    <div class="pfon" id="pfOn"></div>
+    <div class="fhead"><span class="sm muted num" id="pCount"></span>${alt?'':`<div class="seg" id="pSort">${PF_SORT.map(([v,t])=>`<button type="button" data-sort="${v}" aria-pressed="${PF.sort===v}">${t}</button>`).join('')}</div>`}</div>
+    <div id="pbox"></div></section>`;
+  const base=alt?altRows():weekPicks(); const opts=pfOpts(base);
+  const chips=(key,list)=>`<div class="chips${list.length>6?' scroll':''}" data-f="${key}">${list.map(([v,t])=>`<button type="button" class="chip press" data-val="${esc(String(v))}" aria-pressed="${String(PF[key])===String(v)}">${esc(t)}</button>`).join('')}</div>`;
+  const lab=()=>{ const v=$('#pMinEv'), r=$('#pMinE'); if(v) v.textContent=PF.minE<=4?'Any (4+)':PF.minE+'+ pts'; if(r) r.style.setProperty('--v',(PF.minE-4)/11*100+'%'); };
+  $('#pfbox').innerHTML=`${!alt&&opts.st?`<div class="frow"><span class="fl">Status</span>${chips('st',opts.st)}</div>`:''}
+    ${alt?'':`<div class="frow"><span class="fl">Side</span>${chips('side',opts.side)}</div>`}
+    <div class="frow"><span class="fl">Stat</span>${chips('stat',opts.stat)}</div>
+    <div class="frow"><span class="fl">Position</span>${chips('pos',opts.pos)}</div>
+    <div class="frow"><span class="fl">Game</span>${chips('game',opts.game)}</div>
+    ${alt?'':`<div class="fsl"><label for="pMinE"><span>Edge vs DraftKings</span><b class="num" id="pMinEv"></b></label><input type="range" id="pMinE" min="4" max="15" step="1" value="${PF.minE}"></div>`}
+    <div class="pfact"><span class="xs muted">${alt?'Search, stat, position and game also work here.':'Picks need a 4+ point edge (TDs 8+).'}</span><button type="button" class="btn ghost press" id="pfReset">Reset</button></div>`;
+  const sync=()=>{ $('#pfN').textContent=pfCount()||''; $('#pfbox').querySelectorAll('.chips').forEach(c=>{ const k=c.dataset.f; c.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(PF[k])===b.dataset.val?'true':'false')); }); lab(); drawPfOn(); };
+  const redraw=()=>{ pfSave(); sync(); drawPicks(base,true); };
+  $('#pmode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ if(PF.mode===b.dataset.m) return; PF.mode=b.dataset.m; pfSave(); renderPicks(); }));
+  $('#pfBtn').addEventListener('click',()=>{ PF.open=!PF.open; pfSave(); $('#pfPanel').classList.toggle('open',PF.open); $('#pfBtn').setAttribute('aria-expanded',PF.open); drawPfOn(); });
+  $('#pfbox').addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(!c) return; const k=c.parentElement.dataset.f; if(!k) return; PF[k]=k==='minE'?+c.dataset.val:c.dataset.val; redraw(); });
+  const sl=$('#pMinE'); if(sl) sl.addEventListener('input',()=>{ PF.minE=+sl.value; redraw(); });
+  $('#pfReset').addEventListener('click',()=>{ for(const k of pfKeys()) PF[k]=PF_DEF[k]; PF.q=''; $('#pQ').value=''; if(sl) sl.value=PF.minE; redraw(); });
+  let qt=0; $('#pQ').addEventListener('input',e=>{ PF.q=e.target.value; clearTimeout(qt); qt=setTimeout(redraw,140); });
+  const so=$('#pSort'); if(so) so.addEventListener('click',e=>{ const b=e.target.closest('[data-sort]'); if(!b) return; PF.sort=b.dataset.sort; so.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false')); pfSave(); drawPicks(base,true); });
+  $('#pfOn').addEventListener('click',e=>{ const c=e.target.closest('[data-clr]'); if(!c) return; const k=c.dataset.clr; if(k==='q'){ PF.q=''; $('#pQ').value=''; } else PF[k]=PF_DEF[k]; if(k==='minE'&&sl) sl.value=PF.minE; redraw(); });
+  $('#pbox').addEventListener('click',e=>{ const b=e.target.closest('.plk'); if(b) expandUnder(b,b.dataset.p,b.dataset.mk); });
+  sync(); drawPicks(base,false); }
+/* chips for the filters in force, shown under the bar while the panel is closed (tap one to clear it) */
+function drawPfOn(){ const box=$('#pfOn'); if(!box) return; if(PF.open){ box.innerHTML=''; return; }
+  const name=(k,v)=>k==='game'?gameLab(v):k==='minE'?`Edge ${v}+`:k==='pos'?v:k==='q'?`“${PF.q.trim()}”`:((({st:PF_ST,side:PF_SIDE,stat:PF_STAT})[k]||[]).find(x=>x[0]===v)||[0,v])[1];
+  const on=pfKeys().filter(k=>String(PF[k])!==String(PF_DEF[k])).map(k=>[k,name(k,PF[k])]);
+  box.innerHTML=on.map(([k,t],i)=>`<button type="button" class="chip press" data-clr="${k}" style="--i:${i}" aria-label="Clear filter: ${esc(String(t))}">${esc(String(t))}${XS}</button>`).join(''); }
+function drawPicks(base,anim){ const box=$('#pbox'); if(!box) return; const alt=PF.mode==='alt', set=FGRP[PF.stat];
+  if(alt){ const R=base.filter(r=>(!set||set.includes(r.m.mk))&&(PF.pos==='any'||r.p.pos===PF.pos)&&(PF.game==='all'||r.g.id===PF.game)&&pfText(r.p.name,r.p.team));
+    $('#pCount').textContent=R.length===base.length?`${base.length} alt lines`:`${R.length} of ${base.length} alt lines`;
+    box.innerHTML=`<p class="sm muted" style="margin:0 2px 12px">The highest number each player reached in 80%+ of his games this season (5+ games), with the model's chance he gets there this week.</p>
+     <div class="card">${R.length?R.slice(0,80).map((r,i)=>`<button type="button" class="plk press${anim?' in':''}" style="--i:${Math.min(i,14)}" data-p="${r.pid}" data-mk="${r.m.mk}"><div class="who"><b>${esc(r.p.name)}</b><span class="xs muted">${r.p.team} ${r.p.pos} · ${esc(r.g.key)} · ${dayShort(r.g)} ${fmtTime(r.g.time)}</span></div><div class="mid"><div class="bet">${r.k}+ ${esc(MK[r.m.mk].unit)}</div><span class="xs muted num">hit ${r.h.k}/${r.h.n} games · proj ${r.m.q.q50}</span></div><div class="r"><span class="pc num">${pct(r.pr)}</span><span class="xs muted num">fair ${amer(r.pr)}</span></div></button>`).join(''):`<div class="empty">${base.length?'Nothing matches. Clear a filter or tap Reset.':'No alt lines meet the bar yet.'}</div>`}</div>`;
+    if(anim) grow(box); return; }
+  const stOK=x=>PF.st==='all'||(PF.st==='open'?!x.result:PF.st==='graded'?['win','loss','push'].includes(x.result):x.result===PF.st);
+  const R=base.filter(x=>stOK(x)&&(PF.side==='all'||x.side===PF.side)&&(!set||set.includes(x.mk))&&(PF.pos==='any'||pickPos(x)===PF.pos)&&(PF.game==='all'||x.game===PF.game)&&x.edge*100>=PF.minE-1e-9&&pfText(x.name,x.team));
+  const S={edge:(a,b)=>(!!a.result-!!b.result)||b.edge-a.edge, kick:(a,b)=>pickKick(a)-pickKick(b)||b.edge-a.edge, p:(a,b)=>(!!a.result-!!b.result)||pickP(b)-pickP(a)}; R.sort(S[PF.sort]||S.edge);
+  const w=R.filter(x=>x.result==='win').length, l=R.filter(x=>x.result==='loss').length, pu=R.filter(x=>x.result==='push').length, u=R.reduce((t,x)=>t+(x.units||0),0), toPlay=R.filter(x=>!x.result).length;
+  $('#pCount').textContent=`${R.length===base.length?`${base.length} picks`:`${R.length} of ${base.length} picks`} · ${toPlay} to play${w+l+pu?` · ${w}–${l}${pu?'–'+pu:''}, ${u>=0?'+':'−'}${Math.abs(u).toFixed(1)}u`:''}`;
+  box.innerHTML=`<div class="card">${R.length?R.map((x,i)=>pickRow(x,i,anim)).join(''):`<div class="empty">${base.length?'No picks match these filters. Clear one or tap Reset.':'No picks logged for this week yet. They appear once DraftKings posts player lines.'}</div>`}</div>`;
+  grow(box); }
+function pickRow(x,i,anim){ const p=D.players[x.pid]; const g=D.games.find(y=>y.id===x.game); const bet=x.mk==='ATD'?'Anytime TD':`${x.side==='over'?'Over':'Under'} ${x.close_line??x.line} ${MK[x.mk].unit}`;
+  const res=x.result?`<span class="tag ${x.result}">${x.result==='win'?'Hit':x.result==='loss'?'Miss':x.result}${x.actual!=null?' · '+x.actual:''}</span>`:''; const pos=pickPos(x);
+  return `<button type="button" class="plk press${anim?' in':''}" style="--i:${Math.min(i||0,14)}" data-p="${x.pid}" data-mk="${x.mk}"><div class="who"><b>${esc(x.name)}</b><span class="xs muted">${x.team}${pos?' '+pos:''} · ${esc(x.matchup)}${g?' · '+dayShort(g)+' '+fmtTime(g.time):''}</span></div>
+   <div class="mid"><div class="bet"><span class="side ${x.side}">${bet}</span></div></div>
+   <div class="r"><span class="pc num">${pct(pickP(x))}</span><span class="xs muted num">${x.price_est?'est −110':fmtO(x.price)} · edge +${(x.edge*100).toFixed(1)}</span>${res}</div></button>`; }
 /* ===== v6.13 (Nov 15): the Filter tab opens with a choice — Simple (type a name, get one card) or Advanced (the full board) ===== */
 let FMODE=store.get('fmode',null), SQ=store.get('sq','');
 function renderFilter(){ if(FMODE==='simple') return renderFilterSimple(); if(FMODE==='adv') return renderFilterAdv(); renderFilterChoice(); }
@@ -4387,6 +4491,10 @@ function initTheme(){ const b=$('#themeBtn'); b.addEventListener('click',()=>{ c
   t.finished.finally(()=>html.classList.remove('vt-theme')); }); }
 
 function boot(){ $('#wk').innerHTML=`Week ${esc(D.week)}<span class="yr"> · ${esc(D.season)}</span>`; setView(VIEW,false); FROWS=null; simAll(()=>{ if(VIEW==='picks') renderPicks(); if(VIEW==='slate') prebuildGames(); }); }
+/* v13.8: during a swipe the browser sends every tap to <html> (the page isn't hit-testable mid-transition), so a tab tapped
+   mid-swipe is found by position and switched to; the new swipe takes over from the old one */
+document.addEventListener('click',e=>{ const html=document.documentElement; if(e.target!==html||!html.classList.contains('vt-tab')) return;
+  for(const b of document.querySelectorAll('#tabbar [data-v],#nav [data-v]')){ const r=b.getBoundingClientRect(); if(r.width&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){ b.click(); return; } } },true);
 document.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{ closePlayer(true); stopWatch(); TOOL=null; TOOL_FROM=null; if(SH.length) while(SH.length) popSheet(); setView(b.dataset.v,true); }));
 $('#scrim').addEventListener('click',()=>{ while(SH.length) popSheet(); });
 window.addEventListener('resize',movePill);
